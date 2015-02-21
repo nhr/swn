@@ -10,6 +10,7 @@ GD::Polyline
 GD::Text
 JSON
 MIME::Base64
+Module::Install
 PDF::API2
 PDF::API2::Simple
 Term::Prompt
