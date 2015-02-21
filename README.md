@@ -1,7 +1,7 @@
 # SWN Sector Generator
 Written for use with the [Stars Without Number](http://www.sinenomine-pub.com/?page_id=395) role-playing game by [Sine Nomine Publishing](http://www.sinenomine-pub.com/).
 
-This is the source code for a random galactic sector generator. You can play around with it at http://emichron.com/swn/, or fork this repo and host it somewhere else.
+This is the source code for a random galactic sector generator that is hosted on [OpenShift](https://openshift.com). You can play around with it at http://swn.emichron.com/, or fork this repo and host it somewhere else.
 
 The rules for generating this sector are entirely based on the Stars Without Number role-playing game. I created this generator because I loved the game, and really appreciated the insane level of detail that the author put into his tables for rolling up a random galactic sector. I also realized that the rules were _so_ detailed, that it might take a GM quite a while to put their galaxy together.
 
@@ -10,7 +10,7 @@ The rules for generating this sector are entirely based on the Stars Without Num
 For years I promised myself I would clean this up, or rewrite this in a hip new language. But the problem is that a few of the libraries that I'm using have no analogs in other languages. So, let me just lay out the facts:
 
 1. This tool was written in Perl, using many [CPAN](http://www.cpan.org/) libraries.
-2. I am more likely to bundle this in a [docker container](http://docker.io/) than I ever am to port it.
+2. This tool is at some risk of "bit rot", since the first lines of it were written on 2010.
 
 Still want to know how it works? I salute you. Stiff upper lip and all that. Let's get to it.
 
@@ -39,7 +39,22 @@ Really simple script; calls `SWNUtil::tokenize_seed` on a random number to provi
 This is the main processer. It can both emit and accept a big JSON object that represents an entire galactic sector. It is called by `getSector` and the anonymous Save Sector function.  
 
 **iemap.cgi**  
-This CGI handles a (2011) limitation of Internet Explorer, which couldn't handle data:// URLs.
+This CGI handles a (2011) limitation of Internet Explorer, which couldn't handle `data://` URLs.
+
+## Deployment Notes
+This app runs great in OpenShift, and that means that with some minor tweaks it will run great anywhere.
+
+Here's some specific things that you will want to know about if you are planning on using this app _outside_ of OpenShift.
+
+### The Database
+This app uses a SQLite database for fast lookups as it does its generation thang. But you may notice that the database file is not included in this repo. If you deploy this on OpenShift, a [pre_start action hook](https://developers.openshift.com/en/managing-action-hooks.html#_cartridge_control_action_hooks) checks for the existence of the DB file and creates it if the DB isn't found.
+
+You can easily create the DB file yourself on any system where sqlite3 is installed:
+
+    $ cat swn_data.sql | sqlite3 swn.sqlite
+
+### The Environment Variables
+The CGI scripts depend upon the `$OPENSHIFT_DATA_DIR` environment variable. This variable contains the path to the `swn.sqlite` file. So once you have created the database, set this envirnoment variable to equal the path to the database file.
 
 ## Legal Notes
 
