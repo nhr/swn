@@ -10,7 +10,7 @@ The rules for generating this sector are entirely based on the Stars Without Num
 For years I promised myself I would clean this up, or rewrite this in a hip new language. But the problem is that a few of the libraries that I'm using have no analogs in other languages. So, let me just lay out the facts:
 
 1. This tool was written in Perl, using many [CPAN](http://www.cpan.org/) libraries.
-2. This tool is at some risk of "bit rot", since the first lines of it were written on 2010.
+2. This tool is at some risk of "bit rot", since the first lines of it were written in 2010.
 
 Still want to know how it works? I salute you. Stiff upper lip and all that. Let's get to it.
 
