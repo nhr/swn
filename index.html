@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" itemscope itemtype="http://schema.org/SoftwareApplication">
+<head>
+<meta itemprop="name" content="SWN Sector Generator">
+<meta itemprop="description" content="A random star sector generator for Stars Without Number that writes your creation to a TiddlyWiki for offline use.">
+<title>emichron.com | SWN Sector Generator</title>
+<link type="text/css" href="css/smoothness/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
+<link type="text/css" href="css/swn.css" rel="stylesheet" />
+<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript">//<![CDATA[
+jQuery.fn.centerTop = function () {
+    this.css("position","absolute");
+    this.css("top", "0px");
+    this.css("left", (($(window).width() - this.outerWidth()) / 2) + $(window).scrollLeft() + "px");
+    return this;
+}
+jQuery.fn.centerRight = function () {
+    this.css("position","absolute");
+    this.css("right", "0px");
+    this.css("top", (($(window).height() - this.outerHeight()) / 2) + $(window).scrollTop() + "px");
+    return this;
+}
+
+var IEMODE;
+var RSEED;
+var SNAME;
+var STARMAP;
+var STARS;
+var WORLDS;
+var NPCS;
+var CORPS;
+var RELS;
+var POLS;
+var ALIENS;
+var CLICKMAP;
+var MAPCTRS = [];
+var CLICKED = [];
+
+var legalSeedPattern = /^[0-9A-Za-z]+$/;
+
+function getRandSeed(myAuto) {
+    if ((myAuto == 1) && (document.generator.seedId.value != '')) {
+        return;
+    }
+
+    if ($("#sector-frame").is(":visible")) {
+        $("#sector-frame").fadeToggle('300', 'swing');
+    }
+
+    $.ajax({
+        type: 'GET',
+        url: 'CGI/seed.cgi',
+        dataType: 'json',
+        timeout:  5000,
+        data: { action: "request" },
+        success: function(data){
+	    document.generator.seedId.value = data.entries[0];
+            $("#genSec").attr('disabled', false);
+        },
+        error: function(){
+            alert("Could not get a seed from the server.");
+        },
+        complete: function() {
+        }
+    });
+}
+
+function getSector() {
+    RSEED = document.generator.seedId.value.toUpperCase();
+
+    if (RSEED.length > 7) {
+        alert('Seed "' + RSEED + '" is too long. Max length is 7 characters.');
+        RSEED = '';
+	return;
+    }
+    if (!legalSeedPattern.test(RSEED)) {
+        alert('Seed "' + RSEED + '" does not contain legal values. Letters and numbers only.');
+        RSEED = '';
+	return;
+    }
+
+    $("#genSec").attr('disabled', true);
+    $("#wait").dialog('open');
+
+    $.ajax({
+        type:     'POST',
+        url:      'CGI/sectorgen.cgi',
+        dataType: 'json',
+        timeout:  5000,
+	data:     { action: 'display',
+	            token:  RSEED,
+                    isie:   IEMODE,
+                  },
+        success:  function(data){
+	    SNAME   = data.name[0];
+            STARMAP = data.map;
+            STARS   = data.stars;
+	    WORLDS  = data.worlds;
+            NPCS    = data.npcs;
+	    CORPS   = data.corps;
+	    RELS    = data.rels;
+	    POLS    = data.pols;
+	    ALIENS  = data.aliens;
+        },
+        error:    function(){
+            alert("Could not retrieve sector data from the server.");
+        },
+        complete: function() {
+            $("#s-overview").html('<p class="sector-name">Sector ' + SNAME + '<span style="font-size: 10px; font-style: italic;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Click stars to move / swap them]</span></p><img id="starchart" height="820" width="563" style="display: block; margin-left: auto; margin-right: auto;" src="Includes/swnmap.png" />');
+            $("#s-worlds").html(makeWorldsHTML());
+            $("#s-npcs").html(makeNPCsHTML());
+            $("#s-corps").html(makeCorpsHTML());
+            $("#s-rels").html(makeRelsHTML());
+            $("#s-pols").html(makePolsHTML());
+            $("#s-aliens").html(makeAliensHTML());
+            $("#sector").tabs({ selected: 0 });
+            if ($("#sector-frame").is(":visible")) {
+                $("#wait").dialog('close');
+                drawStars();
+            }
+            else {
+                $("#sector-frame").fadeToggle('300', 'swing', function() { $("#wait").dialog('close'); drawStars(); });
+            }
+        }
+    });
+}
+
+function toggleAbout() {
+    var abHeight = $("#about").css('height');
+    if (abHeight == '640px') {
+        $("#abButton").attr('disabled', true);
+        $("#about").animate({ height: 24 }, 'fast', 'swing', function() {
+            $("#about").css({ overflow: 'hidden' });
+            $("#about").animate({ width: 80 }, 'fast', 'swing', function() {
+                $("#abButton").attr('value', '<< About');
+                $("#abButton").attr('disabled', false);
+            })
+        });
+    }
+    else {
+        $("#abButton").attr('disabled', true);
+        $("#about").animate({ width: 320 }, 'fast', 'swing', function() {
+            $("#about").css({ overflow: 'auto' });
+            $("#about").animate({ height: 640 }, 'fast', 'swing', function() {
+                $("#abButton").attr('value', 'About >>');
+                $("#abButton").attr('disabled', false);
+            })
+        });
+    }
+}
+
+function makeWorldsHTML(myIdx, myOldHTML) {
+    return makeTable(WORLDS);
+}
+
+function makeNPCsHTML(myIdx, myOldHTML) {
+    return make2ColHTML(NPCS);
+}
+
+function makeCorpsHTML(myIdx, myOldHTML) {
+    return make2ColHTML(CORPS);
+}
+
+function makeRelsHTML(myIdx, myOldHTML) {
+    return make2ColHTML(RELS);
+}
+
+function makePolsHTML(myIdx, myOldHTML) {
+    return makeTable(POLS);
+}
+
+function makeAliensHTML(myIdx, myOldHTML) {
+    return makeTable(ALIENS);
+}
+
+// Splits a list into a two column table.
+function make2ColHTML (myList) {
+    // Take off one for the header row
+    var wLen  = myList.length - 1;
+    var wOdd  = wLen % 2;
+    var wlMax = Math.floor(wLen / 2);
+    if (wOdd == 1) {
+        wlMax = wlMax + 1;
+    }
+    // Add one back for the header row
+    wlMax = wlMax + 1
+
+    //Make 2 lists
+    var ltCol = [myList[0]];
+    var rtCol = [myList[0]];
+    for (var i = 1; i < wlMax; i++) {
+        ltCol[ltCol.length] = myList[i];
+    }
+    for (var i = wlMax; i < wLen; i++) {
+        rtCol[rtCol.length] = myList[i];
+    }
+
+    var tTxt = '<table style="width: 100%;"><tr><td class="cols">';
+    tTxt = tTxt + makeTable(ltCol);
+    tTxt = tTxt + '</td><td class="cols">';
+    tTxt = tTxt + makeTable(rtCol);
+    tTxt = tTxt + '</td></tr></table>';
+    return tTxt;
+}
+
+// Turns a list into a table. First row expected to contain headers.
+function makeTable (myData) {
+    var tHTML = '<table class="data"><tr>';
+    for (var col = 0; col < myData[0].length; col++) {
+        tHTML = tHTML + '<th class="data">' + myData[0][col] + '</th>';
+    }
+    tHTML = tHTML + '</tr>';
+    for (var row = 1; row < myData.length; row++) {
+        if (row % 2 == 1) {
+            tHTML = tHTML + '<tr>';
+        }
+        else {
+            tHTML = tHTML + '<tr class="alt">';
+        }
+        for (var col = 0; col < myData[row].length; col++) {
+            tHTML = tHTML + '<td>' + myData[row][col] + '</td>';
+        }
+        tHTML = tHTML + '</tr>';
+    }
+    tHTML = tHTML + '</table>';
+
+    return tHTML;
+}
+
+// Mostly based on trial and error, this makes a clickmap
+// for the starmap.
+function makeClickMap() {
+    var xMarks = [1,21,68,89];
+    var yMarks = [1,39,77];
+
+    var cOff   = xMarks[2] + 1;
+    var rOff   = yMarks[2] + 1;
+
+    var mapTxt     = '<map name="chartmap">';
+    var allColTweak = 0;
+    for (var col = 0; col < 8; col++) {
+        var colXoff = col * cOff;
+        if (col > 1) {
+            if (col % 2 == 0) {
+                allColTweak = allColTweak + 2;
+            }
+            else {
+                allColTweak = allColTweak + 1;
+            }
+        }
+        MAPCTRS[col] = new Array();
+        for (var row = 0; row < 10; row++) {
+            var rowYoff = row * rOff;
+            var wTweak  = 0;
+            if (col % 2 == 1) {
+                rowYoff = rowYoff + yMarks[1];
+                wTweak  = 1;
+            }
+            var maxX = xMarks[3] + colXoff - allColTweak - wTweak;
+            var minX = xMarks[0] + colXoff - allColTweak;
+            var maxY = yMarks[2] + rowYoff;
+            var minY = yMarks[0] + rowYoff;
+            var cList = [ xMarks[1] + colXoff - allColTweak,
+                          minY,
+                          xMarks[2] + colXoff - allColTweak - wTweak,
+                          minY,
+                          maxX,
+                          yMarks[1] + rowYoff,
+                          xMarks[2] + colXoff - allColTweak - wTweak,
+                          maxY,
+                          xMarks[1] + colXoff - allColTweak,
+                          maxY,
+                          minX,
+                          yMarks[1] + rowYoff,
+                          xMarks[1] + colXoff - allColTweak,
+                          minY,
+                        ];
+            var cellId = '0' + col+ '0' + row;
+            mapTxt = mapTxt + '<area id="area' + cellId + '" alt="' + cellId + '" onclick="flipStar(' + col + ', ' + row + ')" shape="poly" coords="' + cList.join(',') + '" />';
+
+            // Find the hex center point.
+            var xCtr = Math.floor((maxX - minX) / 2) + minX;
+            var yCtr = Math.floor((maxY - minY) / 2) + minY;
+
+            MAPCTRS[col][row] = [xCtr, yCtr];
+        }
+    }
+    mapTxt = mapTxt + '</map>';
+
+    CLICKMAP = mapTxt;
+}
+
+function drawStars() {
+    var oTxt = '<p class="sector-name">Sector ' + SNAME + '<span style="font-size: 10px; font-style: italic;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Click stars to move / swap them]</span></p><img id="starchart" height="820" width="563" style="display: block; margin-left: auto; margin-right: auto;" src="Includes/swnmap.png" />';
+
+    var iOff = $("#starchart").position();
+
+    var seenCells = [];
+
+    var browserOffset = { left: 0, top: 0 };
+    if (jQuery.browser.webkit == true || jQuery.browser.msie == true) {
+        browserOffset = { left: 38.15, top: -2 };
+    }
+
+    for (var s = 0; s < STARS.length; s++) {
+        var star = STARS[s];
+
+        seenCells[star.cell] = 1;
+
+        // Grep star map position from cell ID
+        var cCol = star.cell.substring(1,2);
+        var cRow = star.cell.substring(3);
+
+        // Lookup center X,Y
+        var cX = MAPCTRS[cCol][cRow][0] + iOff.left - 30 + browserOffset['left'];
+        var cY = MAPCTRS[cCol][cRow][1] + iOff.top - 7 + browserOffset['top'];
+
+        var myDiv = '<div id="cell' + star.cell + '" style="position: absolute; left: ' + cX + 'px; top: ' + cY + 'px; width: 60px; height: 35px; text-align: center;"><img style="height: 15px; width: 15px;" src="Includes/swndot.png" /><br /><span style="font-size: 8px;">' + star.name.toUpperCase() + '</span></div>';
+
+        oTxt = oTxt + myDiv;
+    }
+
+    for (var col = 0; col < 8; col++) {
+        for (var row = 0; row < 10; row++) {
+            var cellID = new String('0' + col + '0' + row);
+            if (seenCells[cellID] != 1) {
+                // Lookup center X,Y
+                var cX = MAPCTRS[col][row][0] + iOff.left - 30 + browserOffset['left'];
+                var cY = MAPCTRS[col][row][1] + iOff.top - 7 + browserOffset['top'];
+
+                var myDiv = '<div id="cell' + cellID + '" style="position: absolute; left: ' + cX + 'px; top: ' + cY + 'px; width: 60px; height: 35px; text-align: center;">&nbsp;</div>';
+
+                oTxt = oTxt + myDiv;
+            }
+        }
+    }
+
+    oTxt = oTxt + '<img style="position: absolute; left: ' + (iOff.left + browserOffset['left']) + 'px; top: ' + (iOff.top + browserOffset['top']) + 'px;" height="820" width="563" src="Includes/clear.gif"  usemap="#chartmap" />' + CLICKMAP;
+
+    $("#s-overview").html(oTxt);
+}
+
+function flipStar(myCol, myRow) {
+    var cellID = String('0' + myCol + '0' + myRow);
+    if (CLICKED.length == 0) {
+        // Figure out if the clicked cell has a star in it.
+        for (var i = 0; i < STARS.length; i++) {
+            if (STARS[i].cell == cellID) {
+                $("#cell" + cellID).css('color', '#F00', 'font-weight', 'bold');
+                CLICKED = [cellID, STARS[i].id];
+                break;
+            }
+        }
+    }
+    else {
+        if (cellID == CLICKED[0]) {
+            // Clicked the same cell again. Clear state.
+            $("#cell" + cellID).css('color', '#000', 'font-weight', 'normal');
+            CLICKED = [];
+        }
+        else {
+            // See if there is a star in the target cell.
+            // If so, swap. Otherwise, just move the first star.
+            for (var i = 0; i < STARS.length; i++) {
+                if (STARS[i].cell == cellID) {
+                    STARS[i].cell = CLICKED[0];
+                    break;
+                }
+            }
+            STARS[CLICKED[1]].cell = cellID;
+            CLICKED = [];
+            drawStars();
+        }
+    }
+}
+
+/* On startup, grab a random seed. */
+$(document).ready(function(){
+    if ($.browser.msie) {
+        IEMODE = 1;
+    }
+    else {
+        IEMODE = 0;
+    }
+    $("#wait").dialog({ autoOpen: false, modal: true, position: 'center', resizable: false, height: 60, width: 100 });
+    $("#svSec").click(function(e) {
+        e.preventDefault();  //stop the browser from following
+        var STARJSON = JSON.stringify(STARS);
+        var ZIPURL = 'CGI/sectorgen.cgi?action=create&token=' + RSEED + '&isie=' + IEMODE + '&stars=' + STARJSON;
+        window.location.href = ZIPURL;
+    });
+    getRandSeed(1);
+    makeClickMap();
+});
+//]]></script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+   })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-46174241-1', 'emichron.com');
+  ga('send', 'pageview');
+</script>
+</head>
+<body>
+<form name="generator">
+<div id="about">
+<input id="abButton" type="button" value="&lt;&lt; About" onclick="toggleAbout();" />
+<p class="about">This utility is designed to very quickly do a lot of the dice-rolling required to prepare for a <a href="http://www.sinenomine-pub.com/">Stars Without Number</a> campaign. If you haven't read through the source book, you will want to go back and do that to get the most benefit from this site.<br />&nbsp;</p>
+<p class="about"><span style="font-weight: bold;">1. Generate a Sector</span><br />Press the Generate Sector button and this utility will use the displayed Seed ID to cook up a sector of the universe for you. Once it has loaded, you can see the position of the stars and tab through a few pages of the randomly generated planets, aliens, NPCs and other window dressing for your campaign.<br />&nbsp;<br /><i>Don't like what you see?</i> No problem--press the re-roll button to get a new Seed ID and try again, or take a shot and type in your own.<br />&nbsp;</p>
+
+<p class="about"><span style="font-weight: bold;">2. Download the ZIP File</span><br />At the bottom of the sector summary, you will see a Download this Sector button. When you press it, you will get a zip file containing:
+<ul>
+ <li>A README file</li>
+ <li>A "GM" version of the sector in <a href="http://www.tiddlywiki.com/">TiddlyWiki</a> format</li>
+ <li>A "PC" version of the sector in <a href="http://www.tiddlywiki.com/">TiddlyWiki</a> format</li>
+ <li>(Internet Explorer only) An image file of the star map</li>
+</ul>
+All of the randomly generated things that you've previewed will be included in the wiki files. Each article includes fully detailed writeups based on the freely distributed version of the Stars Without Number roleplaying game.<br />&nbsp;</p>
+<p class="about"><span style="font-weight: bold;">Questions?</span><br /><a href="mailto:swn_generator@emichron.com">Drop me a line.</a> No promises on a schedule or any specific revisions or improvements, but if you've got an idea for making this utility even better, I'd love to hear it. Thanks, and enjoy!</p><p style="text-align: right;">--<a href="http://www.emichron.com/">N. Harrison Ripps</a>&nbsp;</p>
+<p>&nbsp;<br /><a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">SWN Sector Generator</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="http://emichron.com/" property="cc:attributionName" rel="cc:attributionURL">N. Harrison Ripps</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.<br />Based on a work at <a xmlns:dct="http://purl.org/dc/terms/" href="http://emichron.com/swn/" rel="dct:source">http://emichron.com/swn/</a>.</p>
+</div>
+<div id="main">
+<p style="font-weight: bold;">The SWN Sector Generator</p>
+<p>Designed for use with <a href="http://www.sinenomine-pub.com/">Stars Without Number</a> by <a href="http://www.sinenomine-pub.com/">Sine Nomine Publishing</a></p>
+<hr />
+<table id="gen_tbl">
+ <tr>
+  <td>Seed ID</td>
+  <td><input id="seedId" type="text" size="7" value="" /></td>
+  <td><input id="reRoll" type="button" value="Re-Roll" onclick="getRandSeed(0);" /></td>
+  <td><input id="genSec" type="button" value="Generate Sector &gt;&gt;" onclick="getSector();" /></td>
+ </tr>
+</table>
+</div>
+<div id="sector-frame">
+<div id="sector">
+ <ul>
+  <li><a href="#s-overview">Sector Overview</a></li>
+  <li><a href="#s-worlds">Worlds</a></li>
+  <li><a href="#s-npcs">NPCs</a></li>
+  <li><a href="#s-corps">Corps</a></li>
+  <li><a href="#s-pols">Politics</a></li>
+  <li><a href="#s-rels">Religions</a></li>
+  <li><a href="#s-aliens">Aliens</a></li>
+ </ul>
+ <div id="s-overview"></div>
+ <div id="s-worlds"></div>
+ <div id="s-npcs"></div>
+ <div id="s-corps"></div>
+ <div id="s-pols"></div>
+ <div id="s-rels"></div>
+ <div id="s-aliens"></div>
+</div>
+<div id="save">
+<input id="svSec" type="button" value="Download this Sector" />
+</div>
+</div>
+<div id="wait">Loading...</div>
+</form>
+
+<a href="https://github.com/nhr/swn"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://camo.githubusercontent.com/c6286ade715e9bea433b4705870de482a654f78a/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f77686974655f6666666666662e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_white_ffffff.png"></a>
+
+</body>
+</html>
