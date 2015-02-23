@@ -53,7 +53,7 @@ function getRandSeed(myAuto) {
         type: 'GET',
         url: 'CGI/seed.cgi',
         dataType: 'json',
-        timeout:  5000,
+        timeout:  30000,
         data: { action: "request" },
         success: function(data){
 	    document.generator.seedId.value = data.entries[0];
@@ -88,7 +88,7 @@ function getSector() {
         type:     'POST',
         url:      'CGI/sectorgen.cgi',
         dataType: 'json',
-        timeout:  5000,
+        timeout:  30000,
 	data:     { action: 'display',
 	            token:  RSEED,
                     isie:   IEMODE,
