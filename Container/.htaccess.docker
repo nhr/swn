@@ -1,4 +1,5 @@
 DirectoryIndex index.html
+Options +ExecCGI
 RewriteEngine On
 RewriteCond %{REQUEST_URI} ^/favicon\.ico$
 RewriteCond %{REQUEST_FILENAME} !-f
