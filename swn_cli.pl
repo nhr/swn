@@ -3,8 +3,11 @@
 use strict;
 use warnings;
 
-use FindBin;
-use lib "$FindBin::Bin/PerlLibs";
+use File::Spec;
+my ($cli_volume,$cli_directory,$cli_file) = File::Spec->splitpath(__FILE__);
+use lib File::Spec->catpath($cli_volume,$cli_directory,'PerlLibs');
+use lib File::Spec->catpath($cli_volume,$cli_directory,'extlib/lib/perl5');
+use lib File::Spec->catpath($cli_volume,$cli_directory,'perl5/lib/perl5');
 
 use DBI;
 use SWNPrompt;

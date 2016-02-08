@@ -4,7 +4,7 @@
 <head>
 <meta itemprop="name" content="SWN Sector Generator">
 <meta itemprop="description" content="A random star sector generator for Stars Without Number that writes your creation to a TiddlyWiki for offline use.">
-<title>emichron.com | SWN Sector Generator</title>
+<title>SWN Sector Generator | emichron.com</title>
 <link type="text/css" href="css/smoothness/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
 <link type="text/css" href="css/swn.css" rel="stylesheet" />
 <script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
@@ -51,7 +51,7 @@ function getRandSeed(myAuto) {
 
     $.ajax({
         type: 'GET',
-        url: 'CGI/seed.cgi',
+        url: '/CGI/seed.cgi',
         dataType: 'json',
         timeout:  30000,
         data: { action: "request" },
@@ -86,7 +86,7 @@ function getSector() {
 
     $.ajax({
         type:     'POST',
-        url:      'CGI/sectorgen.cgi',
+        url:      '/CGI/sectorgen.cgi',
         dataType: 'json',
         timeout:  30000,
 	data:     { action: 'display',
@@ -388,7 +388,7 @@ $(document).ready(function(){
     $("#svSec").click(function(e) {
         e.preventDefault();  //stop the browser from following
         var STARJSON = JSON.stringify(STARS);
-        var ZIPURL = 'CGI/sectorgen.cgi?action=create&token=' + RSEED + '&isie=' + IEMODE + '&stars=' + STARJSON;
+        var ZIPURL = '/CGI/sectorgen.cgi?action=create&token=' + RSEED + '&isie=' + IEMODE + '&stars=' + STARJSON;
         window.location.href = ZIPURL;
     });
     getRandSeed(1);

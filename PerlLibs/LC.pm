@@ -9,7 +9,8 @@ BEGIN {
     require Exporter;
 }
 
-use FindBin;
+use File::Spec;
+my ($lc_volume, $lc_directory, $lc_file) = File::Spec->splitpath(__FILE__);
 
 # lc -- language confluxer (http://www.ruf.rice.edu/~pound/revised-lc)
 #
@@ -18,15 +19,15 @@ use FindBin;
 #   letter pair that was at the beginning of a data word, Oct 95.
 # - Cleaned it up a little bit, March 95; more, September 01
 
-use constant { MIN_LENGTH => 3,
-	       MAX_LENGTH => 7,
-             };
+use constant {
+  MIN_LENGTH => 3,
+  MAX_LENGTH => 7,
+};
 
 my %hash  = ();
-my $BPATH = $FindBin::Bin;
-my $FPATH = $BPATH.'/Includes';
-if ($BPATH =~ /Test$/ or $BPATH =~ /CGI$/) {
-    $FPATH = $BPATH.'/../Includes';
+my $FPATH = File::Spec->catpath($lc_volume,$lc_directory,'Includes');
+if ($lc_directory =~ /Test/ or $lc_directory =~ /CGI/ or $lc_directory =~ /PerlLibs/) {
+    $FPATH = File::Spec->catpath($lc_volume,$lc_directory,'../Includes');
 }
 
 sub conflux {
