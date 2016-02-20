@@ -12,18 +12,18 @@ BEGIN {
 }
 
 use Cwd qw(abs_path);
-use FindBin;
+use File::Spec;
+my ($swnu_volume, $swnu_directory, $swnu_file) = File::Spec->splitpath(__FILE__);
 
 use constant SEED_MAX => 4294967296; # 2^32 i.e. MAXINT
 
-my $BPATH = $FindBin::Bin;
-my $IPATH = $BPATH.'/Includes';
-my $FPATH = $BPATH.'/Fonts';
-my $OPATH = $BPATH.'/Output';
-if ($BPATH =~ /Test$/ or $BPATH =~ /CGI$/) {
-    $IPATH = $BPATH.'/../Includes';
-    $FPATH = $BPATH.'/../Fonts';
-    $OPATH = $BPATH.'/../Output';
+my $IPATH = File::Spec->catpath($swnu_volume, $swnu_directory, 'Includes');
+my $FPATH = File::Spec->catpath($swnu_volume, $swnu_directory, 'Fonts');
+my $OPATH = File::Spec->catpath($swnu_volume, $swnu_directory, 'Output');
+if ($swnu_directory =~ /Test/ or $swnu_directory =~ /CGI/ or $swnu_directory =~ /PerlLibs/) {
+    $IPATH = File::Spec->catpath($swnu_volume, $swnu_directory, '../Includes');
+    $FPATH = File::Spec->catpath($swnu_volume, $swnu_directory, '../Fonts');
+    $OPATH = File::Spec->catpath($swnu_volume, $swnu_directory, '../Output');
 }
 
 sub cell_id {

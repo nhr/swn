@@ -1,0 +1,11 @@
+requires 'Data::RandomPerson';
+requires 'GD';
+requires 'GD::Image';
+requires 'GD::Polyline';
+requires 'GD::Text';
+requires 'JSON';
+requires 'MIME::Base64';
+requires 'PDF::API2';
+requires 'PDF::API2::Simple';
+requires 'Term::Prompt';
+requires 'Text::Reflow';

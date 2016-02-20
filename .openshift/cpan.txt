@@ -3,7 +3,7 @@ CGI
 Data::Dumper
 Data::RandomPerson
 DBI
-FindBin
+DBD::SQLite
 GD
 GD::Image
 GD::Polyline

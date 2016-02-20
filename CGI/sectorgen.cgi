@@ -1,15 +1,17 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 use strict;
 use warnings;
 
-use FindBin;
-use lib "$FindBin::Bin/../PerlLibs";
+use File::Spec;
+my ($sg_volume,$sg_directory,$sg_file) = File::Spec->splitpath(__FILE__);
+use lib File::Spec->catpath($sg_volume,$sg_directory,'PerlLibs');
+use lib File::Spec->catpath($sg_volume,$sg_directory,'extlib/lib/perl5');
+use lib File::Spec->catpath($sg_volume,$sg_directory,'perl5/lib/perl5');
 
 use CGI qw(:standard);
 use Data::Dumper;
 use DBI;
-use Env qw(OPENSHIFT_DATA_DIR);
 use JSON;
 use SWN2WIKI;
 use SWNGen;
@@ -32,7 +34,8 @@ my $seed = untokenize_seed($token);
 srand($seed);
 
 # Open a DBH
-my $dbh = DBI->connect("dbi:SQLite:dbname=${OPENSHIFT_DATA_DIR}swn.sqlite",'','',
+my $dbpath = File::Spec->catpath($sg_volume,$sg_directory,'../swn.sqlite');
+my $dbh    = DBI->connect("dbi:SQLite:dbname=$dbpath",'','',
   { RaiseError => 1,
     ReadOnly   => 1,
     AutoCommit => 0 })

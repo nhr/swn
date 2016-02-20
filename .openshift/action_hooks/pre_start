@@ -1,6 +1,0 @@
-#!/bin/bash
-
-if [ ! -f $OPENSHIFT_DATA_DIR/swn.sqlite ]; then
-  echo "Creating app database."
-  cat $OPENSHIFT_REPO_DIR/swn_data.sql | sqlite3 $OPENSHIFT_DATA_DIR/swn.sqlite
-fi
