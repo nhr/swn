@@ -1,6 +1,11 @@
 # SWN Sector Generator
 Written for use with the [Stars Without Number](http://www.sinenomine-pub.com/?page_id=395) role-playing game by [Sine Nomine Publishing](http://www.sinenomine-pub.com/).
 
+- - -
+**Will This Be Updated For The Upcoming Revised Edition of Stars Without Number?**  
+Short answer: yes! Longer answer: I am tracking progress on the public betas of the revised rules, and will work update the SWN Sector Generator once the final free version is published. As with the original, the updated generator will only include content from the free version.
+- - -
+
 This is the source code for a random galactic sector generator that is hosted on [OpenShift](https://openshift.com). You can play around with it at http://swn.emichron.com/, or fork this repo and host it somewhere else.
 
 The rules for generating this sector are entirely based on the Stars Without Number role-playing game. I created this generator because I loved the game, and really appreciated the insane level of detail that the author put into his tables for rolling up a random galactic sector. I also realized that the rules were _so_ detailed, that it might take a GM quite a while to put their galaxy together.
