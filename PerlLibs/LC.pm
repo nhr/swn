@@ -26,7 +26,7 @@ use constant {
 
 my %hash  = ();
 my $FPATH = File::Spec->catpath($lc_volume,$lc_directory,'Includes');
-if ($lc_directory =~ /Test/ or $lc_directory =~ /CGI/ or $lc_directory =~ /PerlLibs/) {
+if ($lc_directory =~ /Test/ or $lc_directory =~ /cgi-bin/ or $lc_directory =~ /PerlLibs/) {
     $FPATH = File::Spec->catpath($lc_volume,$lc_directory,'../Includes');
 }
 

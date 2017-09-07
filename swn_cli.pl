@@ -6,8 +6,7 @@ use warnings;
 use File::Spec;
 my ($cli_volume,$cli_directory,$cli_file) = File::Spec->splitpath(__FILE__);
 use lib File::Spec->catpath($cli_volume,$cli_directory,'PerlLibs');
-use lib File::Spec->catpath($cli_volume,$cli_directory,'extlib/lib/perl5');
-use lib File::Spec->catpath($cli_volume,$cli_directory,'perl5/lib/perl5');
+use lib File::Spec->catpath($cli_volume,$cli_directory,'../perl5/lib/perl5');
 
 use DBI;
 use SWNPrompt;
@@ -20,10 +19,9 @@ my $time = time;
 print STDOUT "STARS WITHOUT NUMBER\nSector Generator\n\n";
 
 # Set up the DB handle
-my $dbh = DBI->connect("dbi:SQLite:dbname=$FindBin::Bin/swn.sqlite",'','',
+my $dbh = DBI->connect("dbi:SQLite:dbname=swn.sqlite",'','',
 		       { RaiseError => 1,
-			 ReadOnly   => 1,
-			 AutoCommit => 0 })
+			 ReadOnly   => 1 })
     or die "Could not connect to DB: $!";
 
 # Get the user input.

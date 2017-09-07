@@ -35,7 +35,7 @@ An anonymous function bound to this button click collects the current state of t
 So far, you're thinking "hey, this reasonably sane JSON-speaking API gives me a good feeling about the back end code." Whelp, here's where you may get panicky.
 
 **Remember [CGI](http://en.wikipedia.org/wiki/Common_Gateway_Interface)?**  
-The `CGI` directory in this repo is not a cruel hoax. In order to get this ship sailing, you will need to configure your web server with CGI support.
+The `cgi-bin` directory in this repo is not a cruel hoax. In order to get this ship sailing, you will need to configure your web server with CGI support.
 
 **seed.cgi**  
 Really simple script; calls `SWNUtil::tokenize_seed` on a random number to provide a seed value. This is the back end of `getRandSeed` above.

@@ -20,7 +20,7 @@ use constant SEED_MAX => 4294967296; # 2^32 i.e. MAXINT
 my $IPATH = File::Spec->catpath($swnu_volume, $swnu_directory, 'Includes');
 my $FPATH = File::Spec->catpath($swnu_volume, $swnu_directory, 'Fonts');
 my $OPATH = File::Spec->catpath($swnu_volume, $swnu_directory, 'Output');
-if ($swnu_directory =~ /Test/ or $swnu_directory =~ /CGI/ or $swnu_directory =~ /PerlLibs/) {
+if ($swnu_directory =~ /Test/ or $swnu_directory =~ /cgi-bin/ or $swnu_directory =~ /PerlLibs/) {
     $IPATH = File::Spec->catpath($swnu_volume, $swnu_directory, '../Includes');
     $FPATH = File::Spec->catpath($swnu_volume, $swnu_directory, '../Fonts');
     $OPATH = File::Spec->catpath($swnu_volume, $swnu_directory, '../Output');

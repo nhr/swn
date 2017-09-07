@@ -51,7 +51,7 @@ function getRandSeed(myAuto) {
 
     $.ajax({
         type: 'GET',
-        url: '/CGI/seed.cgi',
+        url: '/cgi-bin/seed.cgi',
         dataType: 'json',
         timeout:  30000,
         data: { action: "request" },
@@ -86,7 +86,7 @@ function getSector() {
 
     $.ajax({
         type:     'POST',
-        url:      '/CGI/sectorgen.cgi',
+        url:      '/cgi-bin/sectorgen.cgi',
         dataType: 'json',
         timeout:  30000,
 	data:     { action: 'display',
@@ -388,7 +388,7 @@ $(document).ready(function(){
     $("#svSec").click(function(e) {
         e.preventDefault();  //stop the browser from following
         var STARJSON = JSON.stringify(STARS);
-        var ZIPURL = '/CGI/sectorgen.cgi?action=create&token=' + RSEED + '&isie=' + IEMODE + '&stars=' + STARJSON;
+        var ZIPURL = '/cgi-bin/sectorgen.cgi?action=create&token=' + RSEED + '&isie=' + IEMODE + '&stars=' + STARJSON;
         window.location.href = ZIPURL;
     });
     getRandSeed(1);

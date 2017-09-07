@@ -5,9 +5,8 @@ use warnings;
 
 use File::Spec;
 my ($sg_volume,$sg_directory,$sg_file) = File::Spec->splitpath(__FILE__);
-use lib File::Spec->catpath($sg_volume,$sg_directory,'PerlLibs');
-use lib File::Spec->catpath($sg_volume,$sg_directory,'extlib/lib/perl5');
-use lib File::Spec->catpath($sg_volume,$sg_directory,'perl5/lib/perl5');
+use lib File::Spec->catpath($sg_volume,$sg_directory,'../PerlLibs');
+use lib File::Spec->catpath($sg_volume,$sg_directory,'../../perl5/lib/perl5');
 
 use CGI qw(:standard);
 use Data::Dumper;
@@ -37,8 +36,7 @@ srand($seed);
 my $dbpath = File::Spec->catpath($sg_volume,$sg_directory,'../swn.sqlite');
 my $dbh    = DBI->connect("dbi:SQLite:dbname=$dbpath",'','',
   { RaiseError => 1,
-    ReadOnly   => 1,
-    AutoCommit => 0 })
+    ReadOnly   => 1 })
   or die "Could not connect to DB: $!";
 
 my ($sector_name, $star_map, $worlds) = gen_sector( dbh => $dbh, reset => 0 );
