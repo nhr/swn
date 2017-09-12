@@ -37,8 +37,7 @@ srand($seed);
 my $dbpath = File::Spec->catpath($sg_volume,$sg_directory,'../swn.sqlite');
 my $dbh    = DBI->connect("dbi:SQLite:dbname=$dbpath",'','',
   { RaiseError => 1,
-    ReadOnly   => 1,
-    AutoCommit => 0 })
+    ReadOnly   => 1 })
   or die "Could not connect to DB: $!";
 
 my ($sector_name, $star_map, $worlds) = gen_sector( dbh => $dbh, reset => 0 );
