@@ -24,8 +24,7 @@ my $fn    = '/Users/harrison/tmp/map_'.$token.'.png';
 # Set up the DB handle
 my $dbh = DBI->connect('dbi:SQLite:dbname=swn.sqlite','','',
 		       { RaiseError => 1,
-			 ReadOnly   => 1,
-			 AutoCommit => 0 })
+			 ReadOnly   => 1 })
     or die "Could not connect to DB: $!";
 
 # Generate the sector

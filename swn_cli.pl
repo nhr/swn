@@ -22,8 +22,7 @@ print STDOUT "STARS WITHOUT NUMBER\nSector Generator\n\n";
 # Set up the DB handle
 my $dbh = DBI->connect("dbi:SQLite:dbname=$FindBin::Bin/swn.sqlite",'','',
 		       { RaiseError => 1,
-			 ReadOnly   => 1,
-			 AutoCommit => 0 })
+			 ReadOnly   => 1 })
     or die "Could not connect to DB: $!";
 
 # Get the user input.
