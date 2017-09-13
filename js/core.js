@@ -48,7 +48,7 @@ function getRandSeed(myAuto) {
             $("#genSec").attr('disabled', false);
         },
         error: function(){
-            alert("Could not get a seed from the server.");
+            console.error("Could not get a seed from the server.");
         },
         complete: function() {
         }

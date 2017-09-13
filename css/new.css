@@ -1,0 +1,26 @@
+/* about panel styling */
+#about > section, #about > header {
+  margin-bottom: 18px;
+  margin-top: 6px;
+}
+
+#about > section header h2 {
+  font-weight: bold;
+  font-family: Verdana,Arial,Helvetica,SunSans-Regular,Sans-Serif;
+  font-size: inherit;
+  padding: 0;
+}
+
+#about address { 
+  text-align: right;
+  margin-right: 0.5em;
+}
+
+#about address::before {
+  content: '--';
+}
+
+#about > section p {
+  margin-bottom: 1em;
+}
+

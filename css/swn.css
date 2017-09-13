@@ -35,10 +35,7 @@ p {
     margin: 0px;
     padding: 0px;
 }
-p.about {
-    margin-bottom: 6px;
-    margin-top: 6px;
-}
+
 p.sector-name {
     font-size: 16px;
     font-weight: bold;
