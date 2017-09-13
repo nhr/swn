@@ -24,3 +24,17 @@
   margin-bottom: 1em;
 }
 
+/* about panel open-close behavior */
+#about {
+  height: 640px;
+  width: 320px;
+  /* width, delay height by 1s and then trigger */
+  transition: width 0.3s, height 0.3s ease 0.3s;
+}
+
+#about.closed {
+  width: 80px;
+  height: 24px;
+  /* height, delay width by 1s and then trigger */
+  transition: height 0.3s, width 0.3s ease 0.3s;
+}

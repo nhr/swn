@@ -115,30 +115,6 @@ function getSector() {
     });
 }
 
-function toggleAbout() {
-    var abHeight = $("#about").css('height');
-    if (abHeight == '640px') {
-        $("#abButton").attr('disabled', true);
-        $("#about").animate({ height: 24 }, 'fast', 'swing', function() {
-            $("#about").css({ overflow: 'hidden' });
-            $("#about").animate({ width: 80 }, 'fast', 'swing', function() {
-                $("#abButton").attr('value', '<< About');
-                $("#abButton").attr('disabled', false);
-            })
-        });
-    }
-    else {
-        $("#abButton").attr('disabled', true);
-        $("#about").animate({ width: 320 }, 'fast', 'swing', function() {
-            $("#about").css({ overflow: 'auto' });
-            $("#about").animate({ height: 640 }, 'fast', 'swing', function() {
-                $("#abButton").attr('value', 'About >>');
-                $("#abButton").attr('disabled', false);
-            })
-        });
-    }
-}
-
 function makeWorldsHTML(myIdx, myOldHTML) {
     return makeTable(WORLDS);
 }
