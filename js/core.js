@@ -28,33 +28,6 @@ var CLICKED = [];
 
 var legalSeedPattern = /^[0-9A-Za-z]+$/;
 
-function getRandSeed(myAuto) {
-    if ((myAuto == 1) && (document.generator.seedId.value != '')) {
-        return;
-    }
-
-    if ($("#sector-frame").is(":visible")) {
-        $("#sector-frame").fadeToggle('300', 'swing');
-    }
-
-    $.ajax({
-        type: 'GET',
-        url: '/CGI/seed.cgi',
-        dataType: 'json',
-        timeout:  30000,
-        data: { action: "request" },
-        success: function(data){
-	    document.generator.seedId.value = data.entries[0];
-            $("#genSec").attr('disabled', false);
-        },
-        error: function(){
-            console.error("Could not get a seed from the server.");
-        },
-        complete: function() {
-        }
-    });
-}
-
 function getSector() {
     RSEED = document.generator.seedId.value.toUpperCase();
 
@@ -355,7 +328,6 @@ $(document).ready(function(){
         var ZIPURL = '/CGI/sectorgen.cgi?action=create&token=' + RSEED + '&isie=' + IEMODE + '&stars=' + STARJSON;
         window.location.href = ZIPURL;
     });
-    getRandSeed(1);
     makeClickMap();
 });
 

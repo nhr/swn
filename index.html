@@ -21,6 +21,7 @@
   </script>
 </head>
 <body>
+  <div id="error-bar" class="closed"></div>
   <form name="generator">
     <aside id="about" class="closed">
       <input id="about-button" type="button" value="&lt;&lt; About"/>
@@ -40,7 +41,7 @@
           a few pages of the randomly generated planets, aliens, NPCs and other
           window dressing for your campaign.
         </p>
-        
+
         <p>
           <em>Don't like what you see?</em> No problem--press the re-roll
           button to get a new Seed ID and try again, or take a shot and type in
@@ -81,7 +82,7 @@
             <img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png" />
         </a>
         <p>
-          <span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">SWN Sector Generator</span> 
+          <span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">SWN Sector Generator</span>
           by <a
             xmlns:cc="http://creativecommons.org/ns#"
             href="http://emichron.com/" property="cc:attributionName"
@@ -106,8 +107,8 @@
       <table id="gen_tbl">
         <tr>
           <td>Seed ID</td>
-          <td><input id="seedId" type="text" size="7" value="" /></td>
-          <td><input id="reRoll" type="button" value="Re-Roll" onclick="getRandSeed(0);" /></td>
+          <td><input id="seed-id" type="text" size="7" value="" /></td>
+          <td><input id="reroll-button" type="button" value="Re-Roll"/></td>
           <td><input id="genSec" type="button" value="Generate Sector &gt;&gt;" onclick="getSector();" /></td>
         </tr>
       </table>

@@ -38,3 +38,25 @@
   /* height, delay width by 1s and then trigger */
   transition: height 0.3s, width 0.3s ease 0.3s;
 }
+
+/* error bar */
+#error-bar {
+  height: 2em;
+  transition: 1s height;
+  background: rgb(255, 50, 50);
+  width: 100vw;
+  vertical-align: middle;
+  line-height: 2em;
+  text-align: center;
+  overflow: hidden;
+  font-size: 11pt;
+  font-weight: bold;
+  color: black;
+  position: absolute;
+  top: 0;
+  cursor: pointer;
+}
+
+#error-bar.closed {
+  height: 0;
+}
