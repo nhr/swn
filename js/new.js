@@ -1,4 +1,8 @@
 (function() {
+    // SEED_MAX is the maximum allowable raw seed value.
+    // It comes from the original Perl.
+    const SEED_MAX = Math.pow(2, 32);
+
     // for convenience
     var $ = document.querySelector.bind(document);
 
@@ -23,19 +27,12 @@
     // We default to the hosting server.
     document.mainServer = "";
 
-    // fetchSeed returns a promise for a seed value for
-    // the given server.  The caller is responsible for
-    // catching errors from the request.
-    function fetchSeedFromServer(server) {
-        return fetch(server+"/CGI/seed.cgi?action=request")
-            .then(function(resp) {
-                if (!resp.ok) {
-                    return Promise.reject(resp.status+" "+resp.statusText);
-                }
-                return resp.json();
-            }).then(function(seedJSON) {
-                return seedJSON.entries[0];
-            });
+    // makeRandomSeed generates a random 7-character base36 seed
+    // alphanumeric seed in the range [1, MAX_SEED).
+    // The base and range are taken from the original Perl.
+    function makeRandomSeed() {
+        let seedNumber = Math.floor(Math.random() * SEED_MAX-1) + 1;
+        return seedNumber.toString(36).toUpperCase();
     }
 
     // displayError displays an error in the error message bar
@@ -54,12 +51,6 @@
 
         // TODO: close sector frame?
 
-        fetchSeedFromServer(document.mainServer)
-            .then(function(seed) {
-                seedIDField.value = seed;
-            }).catch(function(evt) {
-                console.error("unable to fetch seed from server: ", evt)
-                displayError("unable to fetch seed from server");
-            });
+        seedIDField.value = makeRandomSeed();
     }
 })();
