@@ -5,7 +5,6 @@
   <meta itemprop="description" content="A random star sector generator for Stars Without Number that writes your creation to a TiddlyWiki for offline use.">
   <title>SWN Sector Generator | emichron.com</title>
   <link type="text/css" href="css/smoothness/jquery-ui-1.8.16.custom.css" rel="stylesheet" />
-  <link type="text/css" href="css/swn.css" rel="stylesheet" />
   <link type="text/css" href="css/new.css" rel="stylesheet" />
   <script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
   <script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
@@ -19,125 +18,159 @@
       ga('create', 'UA-46174241-1', 'auto');
       ga('send', 'pageview');
   </script>
+  <template id="tab-panel-template">
+    <link type="text/css" href="css/tab-panel.css" rel="stylesheet" />
+    <nav id="tabs">
+      <slot name="tab-name"></slot>
+    </nav>
+    <div id="panels">
+      <slot>
+      </slot>
+    </div>
+  </template>
+
+  <template id="sector-table-template">
+    <div id="columns-wrapper">
+      <link type="text/css" href="css/sector-table.css" rel="stylesheet" />
+      <table -foreach>
+        <thead>
+          <tr>
+            <th -foreach='headers' -content></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr -foreach='data'>
+            <td -foreach -content></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </template>
 </head>
 <body>
   <div id="error-bar" class="closed"></div>
-  <form name="generator">
-    <aside id="about" class="closed">
-      <input id="about-button" type="button" value="&lt;&lt; About"/>
-      <header>
-        This utility is designed to very quickly do a lot of the dice-rolling
-        required to prepare for a
-        <a href="http://www.sinenomine-pub.com/">Stars Without Number</a>
-        campaign. If you haven't read through the source book, you will want to
-        go back and do that to get the most benefit from this site.
-      </header>
-      <section>
-        <header><h2>1. Generate a Sector</h1></header>
-        <p>
-          Press the Generate Sector button and this utility will use the
-          displayed Seed ID to cook up a sector of the universe for you. Once
-          it has loaded, you can see the position of the stars and tab through
-          a few pages of the randomly generated planets, aliens, NPCs and other
-          window dressing for your campaign.
-        </p>
+  <aside id="about" class="closed">
+    <input id="about-button" type="button" value="&lt;&lt; About"/>
+    <header>
+      This utility is designed to very quickly do a lot of the dice-rolling
+      required to prepare for a
+      <a href="http://www.sinenomine-pub.com/">Stars Without Number</a>
+      campaign. If you haven't read through the source book, you will want to
+      go back and do that to get the most benefit from this site.
+    </header>
+    <section>
+      <header><h2>1. Generate a Sector</h1></header>
+      <p>
+        Press the Generate Sector button and this utility will use the
+        displayed Seed ID to cook up a sector of the universe for you. Once
+        it has loaded, you can see the position of the stars and tab through
+        a few pages of the randomly generated planets, aliens, NPCs and other
+        window dressing for your campaign.
+      </p>
 
-        <p>
-          <em>Don't like what you see?</em> No problem--press the re-roll
-          button to get a new Seed ID and try again, or take a shot and type in
-          your own.
-        </p>
-      </section>
+      <p>
+        <em>Don't like what you see?</em> No problem--press the re-roll
+        button to get a new Seed ID and try again, or take a shot and type in
+        your own.
+      </p>
+    </section>
 
-      <section>
-        <header><h2>2. Download the ZIP File</h1></header>
-        <p>
-          At the bottom of the sector summary, you will see a Download this
-          Sector button. When you press it, you will get a zip file containing:
-          <ul>
-            <li>A README file</li>
-            <li>A "GM" version of the sector in <a href="http://www.tiddlywiki.com/">TiddlyWiki</a> format</li>
-            <li>A "PC" version of the sector in <a href="http://www.tiddlywiki.com/">TiddlyWiki</a> format</li>
-            <li>(Internet Explorer only) An image file of the star map</li>
-          </ul>
-          All of the randomly generated things that you've previewed will be
-          included in the wiki files. Each article includes fully detailed
-          writeups based on the freely distributed version of the Stars Without
-          Number roleplaying game.
+    <section>
+      <header><h2>2. Download the ZIP File</h1></header>
+      <p>
+        At the bottom of the sector summary, you will see a Download this
+        Sector button. When you press it, you will get a zip file containing:
+        <ul>
+          <li>A README file</li>
+          <li>A "GM" version of the sector in <a href="http://www.tiddlywiki.com/">TiddlyWiki</a> format</li>
+          <li>A "PC" version of the sector in <a href="http://www.tiddlywiki.com/">TiddlyWiki</a> format</li>
+          <li>(Internet Explorer only) An image file of the star map</li>
+        </ul>
+        All of the randomly generated things that you've previewed will be
+        included in the wiki files. Each article includes fully detailed
+        writeups based on the freely distributed version of the Stars Without
+        Number roleplaying game.
+      </p>
+    </section>
+    <section>
+      <header><h2>Questions?</h2></header>
+      <p>
+        <a href="mailto:swn_generator@emichron.com">Drop me a line.</a> No
+        promises on a schedule or any specific revisions or improvements, but
+        if you've got an idea for making this utility even better, I'd love
+        to hear it. Thanks, and enjoy!
+      </p>
+      <address><a href="http://www.emichron.com/">N. Harrison Ripps</a></address>
+    </section>
+    <footer>
+      <p>
+        <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">
+          <img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png" />
+      </a>
+      <p>
+        <span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">SWN Sector Generator</span>
+        by <a
+          xmlns:cc="http://creativecommons.org/ns#"
+          href="http://emichron.com/" property="cc:attributionName"
+          rel="cc:attributionURL">N. Harrison Ripps</a>
+        is licensed under a
+        <a rel="license"
+          href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative
+          Commons Attribution-NonCommercial-ShareAlike 4.0 International
+          License</a>.
+        <p>Based on a work at <a
+          xmlns:dct="http://purl.org/dc/terms/"
+          href="http://emichron.com/swn/"
+          rel="dct:source">http://emichron.com/swn/</a>.
         </p>
-      </section>
-      <section>
-        <header><h2>Questions?</h2></header>
-        <p>
-          <a href="mailto:swn_generator@emichron.com">Drop me a line.</a> No
-          promises on a schedule or any specific revisions or improvements, but
-          if you've got an idea for making this utility even better, I'd love
-          to hear it. Thanks, and enjoy!
-        </p>
-        <address><a href="http://www.emichron.com/">N. Harrison Ripps</a></address>
-      </section>
-      <footer>
-        <p>
-          <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">
-            <img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png" />
-        </a>
-        <p>
-          <span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">SWN Sector Generator</span>
-          by <a
-            xmlns:cc="http://creativecommons.org/ns#"
-            href="http://emichron.com/" property="cc:attributionName"
-            rel="cc:attributionURL">N. Harrison Ripps</a>
-          is licensed under a
-          <a rel="license"
-            href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative
-            Commons Attribution-NonCommercial-ShareAlike 4.0 International
-            License</a>.
-          <p>Based on a work at <a
-            xmlns:dct="http://purl.org/dc/terms/"
-            href="http://emichron.com/swn/"
-            rel="dct:source">http://emichron.com/swn/</a>.
-          </p>
-        </p>
-      </footer>
-    </aside>
-    <div id="main">
-      <p style="font-weight: bold;">The SWN Sector Generator</p>
+      </p>
+    </footer>
+  </aside>
+  <div id="main-wrapper">
+    <header id="main">
+      <h1>The SWN Sector Generator</h1>
       <p>Designed for use with <a href="http://www.sinenomine-pub.com/">Stars Without Number</a> by <a href="http://www.sinenomine-pub.com/">Sine Nomine Publishing</a></p>
       <hr />
-      <table id="gen_tbl">
-        <tr>
-          <td>Seed ID</td>
-          <td><input id="seed-id" type="text" size="7" value="" /></td>
-          <td><input id="reroll-button" type="button" value="Re-Roll"/></td>
-          <td><input id="genSec" type="button" value="Generate Sector &gt;&gt;" onclick="getSector();" /></td>
-        </tr>
-      </table>
-    </div>
+      <form id="generator">
+        <label for="seed-id">Seed ID</label>
+        <input name="seed-id" id="seed-id" type="text" size="7" value="" required maxlength="7" pattern="^[0-9A-Za-z]+$"/>
+        <input id="reroll-button" type="button" value="Re-Roll"/>
+        <input id="gen-sec-button" type="submit" value="Generate Sector &gt;&gt;"/>
+      </form>
+    </header>
     <div id="sector-frame">
-      <div id="sector">
-        <ul>
-          <li><a href="#s-overview">Sector Overview</a></li>
-          <li><a href="#s-worlds">Worlds</a></li>
-          <li><a href="#s-npcs">NPCs</a></li>
-          <li><a href="#s-corps">Corps</a></li>
-          <li><a href="#s-pols">Politics</a></li>
-          <li><a href="#s-rels">Religions</a></li>
-          <li><a href="#s-aliens">Aliens</a></li>
-        </ul>
-        <div id="s-overview"></div>
-        <div id="s-worlds"></div>
-        <div id="s-npcs"></div>
-        <div id="s-corps"></div>
-        <div id="s-pols"></div>
-        <div id="s-rels"></div>
-        <div id="s-aliens"></div>
-      </div>
-      <div id="save">
-        <input id="svSec" type="button" value="Download this Sector" />
-      </div>
+      <template -for="sector-display">
+        <link type="text/css" href="css/sector-display.css" rel="stylesheet" />
+        <tab-panel id="sector">
+          <a slot="tab-name">Sector Overview</a></li>
+          <a slot="tab-name">Worlds</a></li>
+          <a slot="tab-name">NPCs</a></li>
+          <a slot="tab-name">Corps</a></li>
+          <a slot="tab-name">Politics</a></li>
+          <a slot="tab-name">Religions</a></li>
+          <a slot="tab-name">Aliens</a></li>
+
+          <div>
+            <header class="sector-name">
+              <h1>Sector <span -content="name"></span></h1>
+              <span class="starchart-instructions">Click stars to move / swap them</span>
+            </header>
+            <img id="starchart" height="820" width="563" src="Includes/swnmap.png" />
+          </div>
+          <sector-table -from='worlds'></sector-table>
+          <sector-table columns="2" -from='npcs'></sector-table>
+          <sector-table columns="2" -from='corps'></sector-table>
+          <sector-table -from='pols'></sector-table>
+          <sector-table columns="2" -from='rels'></sector-table>
+          <sector-table -from='aliens'></sector-table>
+        </tab-panel>
+        <div id="save">
+          <input id="svSec" type="button" value="Download this Sector" />
+        </div>
+      </template>
     </div>
-    <div id="wait">Loading...</div>
-  </form>
+  </div>
+  <div id="wait">Loading...</div>
 
   <a href="https://github.com/nhr/swn"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://camo.githubusercontent.com/c6286ade715e9bea433b4705870de482a654f78a/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f77686974655f6666666666662e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_white_ffffff.png"></a>
 

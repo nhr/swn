@@ -67,7 +67,8 @@ my $sector = { name    => [$sector_name],
              };
 
 if ($action eq 'display') {
-    my @ntbl = (['Name','M/F','Age','Height']);
+    my @nhdr = ('Name','M/F','Age','Height');
+    my @ntbl = ();
     foreach my $npc (sort { $a->{sort} cmp $b->{sort} } @$npcs) {
 	my $row = [ $npc->{name},
 		    substr($npc->{gender}, 0, 1),
@@ -77,18 +78,21 @@ if ($action eq 'display') {
 	push @ntbl, $row;
     }
 
-    my @ctbl = (['Company','Business']);
+    my @chdr = ('Company','Business');
+    my @ctbl = ();
     foreach my $c (sort { $a->{name} cmp $b->{name} } @$corps) {
 	push @ctbl, [ $c->{name}, $c->{business} ];
     }
 
-    my @rtbl = (['Name','Leadership']);
+    my @rhdr = ('Name','Leadership');
+    my @rtbl = ();
     foreach my $r (sort { $a->{name} cmp $b->{name} } @$rels) {
 	my ($l) = split '\.', $r->{leadership};
 	push @rtbl, [$r->{name}, $l];
     }
 
-    my @ptbl = (['Organization','Leadership','Policy','Outsiders','Issues']);
+    my @phdr = ('Organization','Leadership','Policy','Outsiders','Issues');
+    my @ptbl = ();
     foreach my $p (sort { $a->{name} cmp $b->{name} } @$pols) {
         my ($le) = split ':', $p->{leadership};
         my ($pl) = split ':', $p->{policy};
@@ -103,7 +107,8 @@ if ($action eq 'display') {
 		    
     }
 
-    my @wtbl = (['Name','Atmo.','Temp.','Biosphere','Population','TL','Tags']);
+    my @whdr = ('Name','Atmo.','Temp.','Biosphere','Population','TL','Tags');
+    my @wtbl = ();
     foreach my $w (sort { $a->{name} cmp $b->{name} } @$worlds) {
 	my $row = [ $w->{name},
 		    $w->{atmosphere}{short},
@@ -116,7 +121,8 @@ if ($action eq 'display') {
 	push @wtbl, $row;
     }
 
-    my @atbl = (['Name','Body Type','Lenses','Structure']);
+    my @ahdr = ('Name','Body Type','Lenses','Structure');
+    my @atbl = ();
     foreach my $a (sort { $a->{name} cmp $b->{name} } @$aliens) {
 	my $btxt = (int @{$a->{body}} > 1) ? $a->{body}[0][0].', '.$a->{body}[1][0]
 	    : $a->{body}[0][0];
@@ -125,12 +131,19 @@ if ($action eq 'display') {
 	push @atbl, [$a->{name}, $btxt, $ltxt, $stxt];
     }
 
-    $sector->{worlds} = \@wtbl;
-    $sector->{npcs}   = \@ntbl;
-    $sector->{corps}  = \@ctbl;
-    $sector->{rels}   = \@rtbl;
-    $sector->{pols}   = \@ptbl;
-    $sector->{aliens} = \@atbl;
+    my %wobj = ('headers' => \@whdr, 'data' => \@wtbl,);
+    my %nobj = ('headers' => \@nhdr, 'data' => \@ntbl,);
+    my %cobj = ('headers' => \@chdr, 'data' => \@ctbl,);
+    my %robj = ('headers' => \@rhdr, 'data' => \@rtbl,);
+    my %pobj = ('headers' => \@phdr, 'data' => \@ptbl,);
+    my %aobj = ('headers' => \@ahdr, 'data' => \@atbl,);
+
+    $sector->{worlds} = \%wobj;
+    $sector->{npcs}   = \%nobj;
+    $sector->{corps}  = \%cobj;
+    $sector->{rels}   = \%robj;
+    $sector->{pols}   = \%pobj;
+    $sector->{aliens} = \%aobj;
 
     my $jtxt = to_json($sector);
     print header('application/json');

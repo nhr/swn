@@ -1,0 +1,24 @@
+/* data table styling */
+table {
+  border-collapse: collapse;
+  font-size: 10px;
+  width: 100%;
+  white-space: nowrap;
+}
+
+:host {
+  display: block;
+}
+
+div#columns-wrapper {
+  column-count: var(--columns, 1);
+}
+
+thead th {
+  background-color: #999;
+}
+
+tbody tr:nth-child(2n) {
+  background-color: #ccc;
+}
+
