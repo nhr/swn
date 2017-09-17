@@ -1,0 +1,26 @@
+:host {
+  display: block;
+}
+
+polygon.hex {
+  stroke: black;
+  stroke-width: 1;
+  fill: none;
+  transition: stroke-width 0.25s, transform 0.25s;
+  fill: white;
+  transform-origin: center;
+}
+
+polygon.hex:hover {
+  stroke: red;
+  stroke-width: 3;
+  z-index: 100;
+  transform: scale(0.95);
+}
+
+svg {
+  padding: 1em;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
