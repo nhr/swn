@@ -8,11 +8,19 @@ const CIRCUM_TO_HALFSIDE = Math.sin(Math.PI/6);
 class Starmap extends HTMLElement {
     constructor() {
         super();
+        const templ = document.getElementById('starmap-template');
         const shadowRoot = this.attachShadow({mode: 'open'});
-        shadowRoot.innerHTML = '<link type="text/css" href="css/starmap.css" rel="stylesheet" /><svg xmlns="http://www.w3.org/2000/svg" version="1.1"></svg>';
-        this._container = shadowRoot.querySelector("svg");
+        shadowRoot.appendChild(templ.content.cloneNode(true));
+
+        const svg = shadowRoot.querySelector("svg");
+        this._gridContainer = svg.getElementById("grid");
+        this._starsContainer = svg.getElementById("stars");
+        this._container = svg;
 
         this._lastDimensions = {rows: 0, columns: 0, circumradius: 0};
+
+        // handle star clicks
+        this._container.addEventListener('click', this._handleClick.bind(this));
     }
 
     get rows() { return parseInt(this.getAttribute('rows')); }
@@ -73,7 +81,6 @@ class Starmap extends HTMLElement {
     _hexPolygon(center, circumradius) {
         let points = this._hexPoints(center, circumradius);
         let polygon = document.createElementNS(SVG_NS, "polygon");
-        //polygon.setAttribute("points", points.map((pts) => `${Math.round(pts[0])},${Math.round(pts[1])}`).join(" "));
         polygon.setAttribute("points", points.map((pts) => `${Math.round(pts[0])},${Math.round(pts[1])}`).join(" "));
         return polygon;
     }
@@ -82,7 +89,27 @@ class Starmap extends HTMLElement {
     // and `rows` tall, with hexes of the given circumradius.
     _hexGridPolygons(columns, rows, circumradius) {
         let centers = this._centerPoints(columns, rows, circumradius);
-        return centers.map((center) => this._hexPolygon(center, circumradius));
+        return centers.map((center, ind) => {
+            let poly = this._hexPolygon(center, circumradius)
+            let label = this._cellLabel(ind%columns, Math.floor(ind/columns));
+            label.setAttribute("x", center[0]);
+            label.setAttribute("y", center[1]);
+
+            let group = document.createElementNS(SVG_NS, "g");
+            group.appendChild(poly);
+            group.appendChild(label);
+
+            return group;
+        });
+    }
+
+    // _cellLabel produces the label element for a cell at the given row and column.
+    _cellLabel(column, row) {
+        let elem = document.createElementNS(SVG_NS, "text");
+        elem.setAttribute("text-anchor", "middle")
+        elem.textContent = this._cellId(column, row);
+
+        return elem;
     }
 
     get _dimensionsChanged() {
@@ -99,15 +126,25 @@ class Starmap extends HTMLElement {
                 this.rows*2*inradius+(inradius*(this.columns%2))+inradius];
     }
 
+    // cellId produces cell label text in the form of XXYY from the given
+    // row and column.
+    _cellId(column, row) {
+        const rowRaw = `0${row}`;
+        const colRaw = `0${column}`;
+
+        return `${colRaw.slice(rowRaw.length-2)}${rowRaw.slice(colRaw.length-2)}`;
+    }
+
     _renderGrid() {
         if (!this._dimensionsChanged) { return; }
 
         let polys = this._hexGridPolygons(this.columns, this.rows, this.circumradius);
-        this._container.innerHTML = '';
+        this._gridContainer.innerHTML = '';
 
         polys.forEach((poly, ind) => {
             poly.classList.add('hex');
-            this._container.appendChild(poly);
+            poly.dataset.cell = this._cellId(ind % this.columns, Math.floor(ind / this.columns));
+            this._gridContainer.appendChild(poly);
         });
 
         let containerSize = this._desiredContainerSize;
@@ -115,6 +152,89 @@ class Starmap extends HTMLElement {
         this._container.setAttribute('height', containerSize[1]);
 
         this._lastDimensions = {rows: this.rows, columns: this.columns, circumradius: this.circumradius};
+    }
+
+    // _starPolygons produces stars from the given star data positioned on a grid
+    // of hexes according to columns, rows, and circumradius.
+    _starPolygons(stars, columns, rows, circumradius) {
+        let centers = this._centerPoints(columns, rows, circumradius);
+        let elems = new Array(stars.length);
+        for (let [ind, star] of stars.entries()) {
+            // TODO: is this an SWN thing, or an nhr thing?
+            let cellCol = parseInt(star.cell.substring(1,2));
+            let cellRow = parseInt(star.cell.substring(3,4));
+
+            let centerPoint = centers[cellRow*columns+cellCol];
+
+            let groupElem = document.createElementNS(SVG_NS, "g");
+
+            groupElem.innerHTML = `
+            <circle cx="${centerPoint[0]}" cy="${centerPoint[1]}" r="7.5"/>
+            <text text-anchor="middle" x="${centerPoint[0]}" y="${centerPoint[1]}">${star.name}</text>`
+
+            elems[ind] = groupElem;
+        }
+
+        return elems;
+    }
+
+    _updateStars() {
+        let stars = this._starPolygons(this._starData, this.columns, this.rows, this.circumradius);
+        this._starsContainer.innerHTML = '';
+        stars.forEach((grp, ind) => {
+            grp.classList.add('star');
+            let star = this._starData[ind];
+            grp.dataset.starName = star.name;
+            grp.dataset.starCell = star.cell;
+            grp.dataset.starCount = star.count;
+            this._starsContainer.appendChild(grp);
+        });
+    }
+
+    _handleClick(evt) {
+        // TODO: use drag and drop API
+        if (evt.target.matches(".star, .star *")) {
+            this._beginStarMove(evt.target.closest(".star"));
+        } else if (evt.target.matches(".hex, .hex *")) {
+            this._endStarMove(evt.target.closest(".hex").dataset.cell);
+        }
+    }
+
+    _beginStarMove(starElem) {
+        starElem.classList.add('move');
+        this._container.classList.add('move');
+    }
+
+    _endStarMove(targetHex) {
+        this._container.classList.remove('move');
+
+        let targetStar = this._starsContainer.querySelector('.star.move');
+        if (!targetStar) { return; }
+
+        targetStar.classList.remove('move');
+
+        // make sure to figure out if there was already a star in the target hex, so we can swap
+        let existingStarData = this._starData.find((star) => star.cell === targetHex);
+
+        // find the data for the star that we're moving
+        let starData = this._starData.find((star) => star.cell === targetStar.dataset.starCell && star.name === targetStar.dataset.starName);
+
+        starData.cell = targetHex;
+        if (existingStarData) {
+            existingStarData.cell = targetStar.dataset.starCell;
+        }
+
+        this._updateStars();
+    }
+
+    set data(d) {
+        this._starData = d;
+
+        this._updateStars();
+    }
+
+    get data() {
+        return this._starData;
     }
 }
 

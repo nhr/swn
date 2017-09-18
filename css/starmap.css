@@ -2,7 +2,7 @@
   display: block;
 }
 
-polygon.hex {
+.hex polygon {
   stroke: black;
   stroke-width: 1;
   fill: none;
@@ -11,11 +11,25 @@ polygon.hex {
   transform-origin: center;
 }
 
-polygon.hex:hover {
+svg.move .hex {
+  cursor: pointer;
+}
+
+svg.move .hex:hover polygon {
   stroke: red;
   stroke-width: 3;
   z-index: 100;
   transform: scale(0.95);
+}
+
+.hex {
+  cursor: default;
+}
+
+.hex text {
+  transform: translate(0, -20px);
+  fill: grey;
+  user-select: none;
 }
 
 svg {
@@ -23,4 +37,36 @@ svg {
   display: block;
   margin-left: auto;
   margin-right: auto;
+}
+
+.star circle {
+  stroke: yellow;
+  fill: yellow;
+  stroke-width: 1;
+  filter: url("#star-glow");
+  transform-origin: center;
+  transition: transform 0.25s;
+}
+
+.star text {
+  transform: translate(0px, 20px);
+  font-size: 8px;
+}
+
+svg:not(.move) .star:hover circle {
+  transform: scale(1.4);
+}
+
+svg:not(move) .star {
+  cursor: pointer;
+}
+
+/* space theme */
+:host(.space-theme) .hex polygon {
+  fill: black;
+  stroke: white;
+}
+
+:host(.space-theme) .star text {
+  fill: white;
 }
