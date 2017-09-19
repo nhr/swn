@@ -23,6 +23,7 @@ my $token   = $q->param('token');
 my $isie    = $q->param('isie');
 my $instars = $q->param('stars');
 my $to_pdf  = $q->param('pdf') || 0;
+my $advanced = $q->param('advanced') || 0;
 
 my $usemap = (defined $instars) ? from_json($instars) : [];
 
@@ -65,6 +66,18 @@ my $sector = { name    => [$sector_name],
 	       map     => $map,
                stars   => $star_map,
              };
+
+if ($advanced) {
+    $sector->{systems} = {
+        'worlds' => \@$worlds,
+        'npcs' => \@$npcs,
+        'corps' => \@$corps,
+        'rels' => \@$rels,
+        'pols' => \@$pols,
+        'aliens' => \@$aliens,
+        'stars' => $star_map,
+    };
+}
 
 if ($action eq 'display') {
     my @nhdr = ('Name','M/F','Age','Height');

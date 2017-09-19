@@ -121,8 +121,15 @@ class TemplateRenderer {
 
         if (node.hasAttribute('-from')) {
             let fromKey = node.getAttribute('-from');
+            let fromData = null;
+            if (fromKey) {
+                fromData = data[fromKey];
+            } else {
+                fromData = data;
+            }
+
             customElements.whenDefined(node.tagName.toLowerCase()).then(() => {
-                node.data = data[fromKey];
+                node.data = fromData;
             });
         }
 
@@ -307,6 +314,7 @@ customElements.define("sector-table", SectorTable);
         var formData = new FormData();
         formData.append('action', 'display');
         formData.append('token', seed.toUpperCase());
+        formData.append('advanced', 1);
         formData.append('isie', false); // WHY? WHY IS THIS A THING?
         return fetch(server+"/cgi-bin/sectorgen.cgi", {method: 'POST', body: formData})
             .then(function(resp) {

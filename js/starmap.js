@@ -5,6 +5,92 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 const CIRCUM_TO_INNER = Math.cos(Math.PI/6);
 const CIRCUM_TO_HALFSIDE = Math.sin(Math.PI/6);
 
+const MAX_RING_RADIUS = 30;
+const MIN_RING_RADIUS = 15;
+
+class StarSystem {
+    constructor(name, cell, worlds) {
+        this.name = name;
+
+        this.row = 0;
+        this.column = 0;
+        this.cell = cell;
+
+        this.worlds = worlds.sort((a, b) => a.sys_pos - b.sys_pos);
+    }
+
+    get cell() {
+        const rowRaw = `0${this.row}`;
+        const colRaw = `0${this.column}`;
+
+        return `${colRaw.slice(rowRaw.length-2)}${rowRaw.slice(colRaw.length-2)}`;
+
+    }
+
+    set cell(c) {
+        this.column = parseInt(c.substring(1, 2));
+        this.row = parseInt(c.substring(3, 4));
+    }
+
+    static fromData(stars, worlds) {
+        let worldsByStarId = new Map();
+        for (let star of stars) { worldsByStarId.set(star.id, []); }
+
+        for (let world of worlds) {
+            let starWorlds = worldsByStarId.get(world.star_id);
+            starWorlds.push(world);
+        }
+
+        return stars.map((star) => new StarSystem(star.name, star.cell, worldsByStarId.get(star.id)));
+    }
+}
+
+class StarSystemRenderer {
+    constructor(columns, rows, circumradius) {
+        this._columns = columns;
+        this._rows = rows;
+        this._circumradius = circumradius;
+
+        this._inradius = CIRCUM_TO_INNER*circumradius;
+        this._halfSideLen = CIRCUM_TO_HALFSIDE*circumradius;
+    }
+
+    _positionFor(system) {
+        let y = (system.row*2*this._inradius)+(this._inradius * (system.column%2))+this._inradius;
+        let x = ((system.column+1)*this._circumradius)+(system.column*this._halfSideLen);
+
+        return [x, y];
+    }
+
+    svgFor(system) {
+        let pos = this._positionFor(system);
+
+        // render the star
+        let star = `<circle cx="${pos[0]}" cy="${pos[1]}" r="7.5"/>`
+
+        // render the label
+        let label = `<text text-anchor="middle" x="${pos[0]}" y="${pos[1]}">${system.name}</text>`
+
+        // render the world rings
+        const ringIncrement = Math.floor((MAX_RING_RADIUS - MIN_RING_RADIUS) / system.worlds.length);
+        let worldRings = system.worlds.map((world, ind) => {
+            let ringRadius = MIN_RING_RADIUS + ringIncrement*ind;
+            return `
+            <g class="world" style="transform-origin: ${pos[0]}px ${pos[1]}px">
+                <circle cx="${pos[0]}" cy="${pos[1]}" r="${ringRadius}" class="orbit"/>
+                <g style="transform-origin: ${pos[0]}px ${pos[1]}px"><circle cx="${pos[0]}" cy="${pos[1]+ringRadius}" r="2.5" class="planet" style="transform-origin: ${pos[0]}px ${pos[1]}px"/></g>
+            </g>
+            `
+        });
+
+        let overallGroup = document.createElementNS(SVG_NS, "g");
+        overallGroup.innerHTML = star+label+`<g>${worldRings.join("\n")}</g>`;
+        overallGroup.style = `transform-origin: ${pos[0]}px ${pos[1]}px`;
+
+        return overallGroup;
+    }
+}
+
 class Starmap extends HTMLElement {
     constructor() {
         super();
@@ -179,11 +265,13 @@ class Starmap extends HTMLElement {
     }
 
     _updateStars() {
-        let stars = this._starPolygons(this._starData, this.columns, this.rows, this.circumradius);
+        let renderer = new StarSystemRenderer(this.columns, this.rows, this.circumradius);
+        let systems = StarSystem.fromData(this._starData.stars, this._starData.worlds);
+        let stars = systems.map((system) => renderer.svgFor(system));
         this._starsContainer.innerHTML = '';
         stars.forEach((grp, ind) => {
             grp.classList.add('star');
-            let star = this._starData[ind];
+            let star = this._starData.stars[ind];
             grp.dataset.starName = star.name;
             grp.dataset.starCell = star.cell;
             grp.dataset.starCount = star.count;
@@ -214,10 +302,10 @@ class Starmap extends HTMLElement {
         targetStar.classList.remove('move');
 
         // make sure to figure out if there was already a star in the target hex, so we can swap
-        let existingStarData = this._starData.find((star) => star.cell === targetHex);
+        let existingStarData = this._starData.stars.find((star) => star.cell === targetHex);
 
         // find the data for the star that we're moving
-        let starData = this._starData.find((star) => star.cell === targetStar.dataset.starCell && star.name === targetStar.dataset.starName);
+        let starData = this._starData.stars.find((star) => star.cell === targetStar.dataset.starCell && star.name === targetStar.dataset.starName);
 
         starData.cell = targetHex;
         if (existingStarData) {
