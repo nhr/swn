@@ -46,24 +46,12 @@ class StarSystem {
 }
 
 class StarSystemRenderer {
-    constructor(columns, rows, circumradius) {
-        this._columns = columns;
-        this._rows = rows;
-        this._circumradius = circumradius;
-
-        this._inradius = CIRCUM_TO_INNER*circumradius;
-        this._halfSideLen = CIRCUM_TO_HALFSIDE*circumradius;
-    }
-
-    _positionFor(system) {
-        let y = (system.row*2*this._inradius)+(this._inradius * (system.column%2))+this._inradius;
-        let x = ((system.column+1)*this._circumradius)+(system.column*this._halfSideLen);
-
-        return [x, y];
+    constructor(grid) {
+        this._grid = grid;
     }
 
     svgFor(system) {
-        let pos = this._positionFor(system);
+        let pos = this._grid.centerPointFor(system.column, system.row);
 
         // render the star
         let star = `<circle cx="${pos[0]}" cy="${pos[1]}" r="7.5"/>`
@@ -91,6 +79,101 @@ class StarSystemRenderer {
     }
 }
 
+class SectorHexGrid {
+    constructor(columns, rows, cellSize) {
+        this.columns = columns;
+        this.rows = rows;
+        // cellSize is the circumradius of the hexes
+        this.cellSize = cellSize;
+
+        this._inradius = CIRCUM_TO_INNER*this.cellSize;
+        this._halfSideLen = CIRCUM_TO_HALFSIDE*this.cellSize;
+    }
+
+    // centerPointFor produces the coordinates of the center of the hex
+    // at the given column and row.
+    centerPointFor(column, row) {
+        const y = (row*2*this._inradius)+(this._inradius * (column%2))+this._inradius;
+        const x = ((column+1)*this.cellSize)+(column*this._halfSideLen);
+
+        return [x, y];
+    }
+
+    // cellIdFor returns the cell ID for the given hex.
+    cellIdFor(column, row) {
+        const rowRaw = `0${row}`;
+        const colRaw = `0${column}`;
+
+        return `${colRaw.slice(rowRaw.length-2)}${rowRaw.slice(colRaw.length-2)}`;
+    }
+
+    // centerPoints returns the center point for every hex in this hex grid.
+    get centerPoints() {
+        let points = new Array(this.columns * this.rows);
+        for (let row = 0; row < this.rows; row++) {
+            for (let col = 0; col < this.columns; col++) {
+                points[row*this.columns+col] = this.centerPointFor(col, row);
+            }
+        }
+        return points;
+    }
+
+    // totalSize returns the total size of the bounding box of the grid.
+    get totalSize() {
+        return [(this.columns+1)*this.cellSize+this.columns*this._halfSideLen,
+                this.rows*2*this._inradius+(this._inradius*(this.columns%2))+this._inradius];
+    }
+}
+
+class SectorHexGridRenderer {
+    // _hexPoints produces the points of a hexagon on the given
+    // grid with the given center.
+    _hexPoints(grid, center) {
+        let points = new Array(6);
+        const pointAngles = 2*Math.PI/6;
+
+        for (let i = 0; i < 6; i++) {
+            points[i] = [Math.cos(pointAngles*i)*grid.cellSize+center[0], Math.sin(pointAngles*i)*grid.cellSize+center[1]];
+        }
+
+        return points;
+    }
+
+    // _hexPolygon produces a polygon element for a hex at the given location
+    // on the given grid.
+    _hexPolygon(grid, center) {
+        let points = this._hexPoints(grid, center);
+        let polygon = document.createElementNS(SVG_NS, "polygon");
+        polygon.setAttribute("points", points.map((pts) => `${Math.round(pts[0])},${Math.round(pts[1])}`).join(" "));
+        return polygon;
+    }
+
+    // _cellLabel produces the label element for a cell at the given row and column in the
+    // given grid.
+    _cellLabel(grid, column, row) {
+        let elem = document.createElementNS(SVG_NS, "text");
+        elem.setAttribute("text-anchor", "middle")
+        elem.textContent = grid.cellIdFor(column, row);
+
+        return elem;
+    }
+
+    svgFor(grid) {
+        return grid.centerPoints.map((center, ind) => {
+            let poly = this._hexPolygon(grid, center)
+            let label = this._cellLabel(grid, ind%grid.columns, Math.floor(ind/grid.columns));
+            label.setAttribute("x", center[0]);
+            label.setAttribute("y", center[1]);
+
+            let group = document.createElementNS(SVG_NS, "g");
+            group.appendChild(poly);
+            group.appendChild(label);
+
+            return group;
+        });
+    }
+}
+
 class Starmap extends HTMLElement {
     constructor() {
         super();
@@ -103,7 +186,7 @@ class Starmap extends HTMLElement {
         this._starsContainer = svg.getElementById("stars");
         this._container = svg;
 
-        this._lastDimensions = {rows: 0, columns: 0, circumradius: 0};
+        this._lastGrid = new SectorHexGrid(0, 0, 0);
 
         // handle star clicks
         this._container.addEventListener('click', this._handleClick.bind(this));
@@ -124,148 +207,44 @@ class Starmap extends HTMLElement {
 
     attributeChangedCallback(attr, oldVal, newVal) {
         this._renderGrid();
+        if (this._starData) {
+            this._updateStars();
+        }
     }
 
     connectedCallback() {
         this._renderGrid();
     }
 
-    // _hexPoints produces the points of a hexagon with the given center
-    // and circumradius.
-    _hexPoints(center, circumradius) {
-        let points = new Array(6);
-        const pointAngles = 2*Math.PI/6;
-
-        for (let i = 0; i < 6; i++) {
-            points[i] = [Math.cos(pointAngles*i)*circumradius+center[0], Math.sin(pointAngles*i)*circumradius+center[1]];
-        }
-
-        return points;
-    }
-
-    // _centerPoints produces a list of center points for a grid of hexagons
-    // `columns` hexagons wide and `rows` hexagons tall, for hexes with the
-    // given circumradius.
-    _centerPoints(columns, rows, circumradius) {
-        const inradius = CIRCUM_TO_INNER*circumradius;
-        const halfSideLen = CIRCUM_TO_HALFSIDE*circumradius;
-
-        let points = new Array(columns * rows);
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < columns; col++) {
-                // every other column is one radius down
-                let y = (row*2*inradius)+(inradius * (col%2))+inradius;
-                let x = ((col+1)*circumradius)+(col*halfSideLen);
-                points[row*columns+col] = [x, y];
-            }
-        }
-        return points;
-    }
-
-    // _hexPolygon produces a polygon element with points with the given center
-    // and circumradius.
-    _hexPolygon(center, circumradius) {
-        let points = this._hexPoints(center, circumradius);
-        let polygon = document.createElementNS(SVG_NS, "polygon");
-        polygon.setAttribute("points", points.map((pts) => `${Math.round(pts[0])},${Math.round(pts[1])}`).join(" "));
-        return polygon;
-    }
-
-    // _hexGridPolygons produces polygon elements for a grid of hexagons `columns` wide
-    // and `rows` tall, with hexes of the given circumradius.
-    _hexGridPolygons(columns, rows, circumradius) {
-        let centers = this._centerPoints(columns, rows, circumradius);
-        return centers.map((center, ind) => {
-            let poly = this._hexPolygon(center, circumradius)
-            let label = this._cellLabel(ind%columns, Math.floor(ind/columns));
-            label.setAttribute("x", center[0]);
-            label.setAttribute("y", center[1]);
-
-            let group = document.createElementNS(SVG_NS, "g");
-            group.appendChild(poly);
-            group.appendChild(label);
-
-            return group;
-        });
-    }
-
-    // _cellLabel produces the label element for a cell at the given row and column.
-    _cellLabel(column, row) {
-        let elem = document.createElementNS(SVG_NS, "text");
-        elem.setAttribute("text-anchor", "middle")
-        elem.textContent = this._cellId(column, row);
-
-        return elem;
-    }
-
     get _dimensionsChanged() {
-        return this._lastDimensions.rows !== this.rows ||
-            this._lastDimensions.columns !== this.columns ||
-            this._lastDimensions.circumradius !== this.circumradius;
-    }
-
-    get _desiredContainerSize() {
-        const inradius = CIRCUM_TO_INNER*this.circumradius;
-        const halfSideLen = CIRCUM_TO_HALFSIDE*this.circumradius;
-
-        return [(this.columns+1)*this.circumradius+this.columns*halfSideLen,
-                this.rows*2*inradius+(inradius*(this.columns%2))+inradius];
-    }
-
-    // cellId produces cell label text in the form of XXYY from the given
-    // row and column.
-    _cellId(column, row) {
-        const rowRaw = `0${row}`;
-        const colRaw = `0${column}`;
-
-        return `${colRaw.slice(rowRaw.length-2)}${rowRaw.slice(colRaw.length-2)}`;
+        return this._lastGrid.rows !== this.rows ||
+            this._lastGrid.columns !== this.columns ||
+            this._lastGrid.cellSize !== this.cellSize;
     }
 
     _renderGrid() {
         if (!this._dimensionsChanged) { return; }
 
-        let polys = this._hexGridPolygons(this.columns, this.rows, this.circumradius);
+        let grid = new SectorHexGrid(this.columns, this.rows, this.circumradius);
+        let renderer = new SectorHexGridRenderer();
+        let polys = renderer.svgFor(grid);
         this._gridContainer.innerHTML = '';
 
         polys.forEach((poly, ind) => {
             poly.classList.add('hex');
-            poly.dataset.cell = this._cellId(ind % this.columns, Math.floor(ind / this.columns));
+            poly.dataset.cell = grid.cellIdFor(ind % this.columns, Math.floor(ind / this.columns));
             this._gridContainer.appendChild(poly);
         });
 
-        let containerSize = this._desiredContainerSize;
+        let containerSize = grid.totalSize;
         this._container.setAttribute('width', containerSize[0]);
         this._container.setAttribute('height', containerSize[1]);
 
-        this._lastDimensions = {rows: this.rows, columns: this.columns, circumradius: this.circumradius};
-    }
-
-    // _starPolygons produces stars from the given star data positioned on a grid
-    // of hexes according to columns, rows, and circumradius.
-    _starPolygons(stars, columns, rows, circumradius) {
-        let centers = this._centerPoints(columns, rows, circumradius);
-        let elems = new Array(stars.length);
-        for (let [ind, star] of stars.entries()) {
-            // TODO: is this an SWN thing, or an nhr thing?
-            let cellCol = parseInt(star.cell.substring(1,2));
-            let cellRow = parseInt(star.cell.substring(3,4));
-
-            let centerPoint = centers[cellRow*columns+cellCol];
-
-            let groupElem = document.createElementNS(SVG_NS, "g");
-
-            groupElem.innerHTML = `
-            <circle cx="${centerPoint[0]}" cy="${centerPoint[1]}" r="7.5"/>
-            <text text-anchor="middle" x="${centerPoint[0]}" y="${centerPoint[1]}">${star.name}</text>`
-
-            elems[ind] = groupElem;
-        }
-
-        return elems;
+        this._lastGrid = grid;
     }
 
     _updateStars() {
-        let renderer = new StarSystemRenderer(this.columns, this.rows, this.circumradius);
+        let renderer = new StarSystemRenderer(this._lastGrid);
         let systems = StarSystem.fromData(this._starData.stars, this._starData.worlds);
         let stars = systems.map((system) => renderer.svgFor(system));
         this._starsContainer.innerHTML = '';
