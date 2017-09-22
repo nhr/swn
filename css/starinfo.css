@@ -1,0 +1,11 @@
+:host {
+  display: block;
+}
+
+.star text {
+  stroke: black;
+  stroke-width: 0.5;
+  fill: white;
+  font-size: 15pt;
+  transform: translate(0px, -7em);
+}

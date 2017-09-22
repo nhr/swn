@@ -218,7 +218,6 @@ class Starmap extends HTMLElement {
         this._gridContainer = svg.getElementById("grid");
         this._starsContainer = svg.getElementById("stars");
         this._container = svg;
-        this._infoPane = shadowRoot.querySelector('star-info');
 
         this._lastGrid = new SectorHexGrid(0, 0, 0);
 
@@ -226,6 +225,8 @@ class Starmap extends HTMLElement {
         this._container.addEventListener('click', this._handleClick.bind(this));
 
         this._systems = null;
+
+        this._selectedSystem = null;
     }
 
     get rows() { return parseInt(this.getAttribute('rows')); }
@@ -301,12 +302,29 @@ class Starmap extends HTMLElement {
 
     _handleClick(evt) {
         // TODO: use drag and drop API
-        if (evt.target.matches(".star, .star *")) {
+        if (evt.target.matches(".star.move, .star.move *")) {
+            this._showStarInfo(evt.target.closest(".star"));
+        } else if (evt.target.matches(".star, .star *")) {
             this._beginStarMove(evt.target.closest(".star"));
         } else if (evt.target.matches(".hex, .hex *")) {
             this._endStarMove(evt.target.closest(".hex").dataset.cell);
         }
     }
+
+    get selectedSystem() {
+        return this._selectedSystem;
+    }
+
+    _showStarInfo(starElem) {
+        this._endStarMove()
+        starElem.classList.add('info');
+
+        // show the info pane
+        let system = this._systems.find((sys) => sys.name === starElem.dataset.starName);
+        this._selectedSystem = system;
+        this.dispatchEvent(new Event('display-info', {bubbles: false}));
+    }
+
 
     _beginStarMove(starElem) {
         starElem.classList.add('move');

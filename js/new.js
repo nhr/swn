@@ -156,41 +156,57 @@ class TemplateRenderer {
             this._renderNode(child, data);
         }
     }
+}
 
-    static initializeCustomElements() {
-        for (let elem of document.querySelectorAll('template[-for]')) {
-            var customElemName = elem.getAttribute('-for');
-            // skip already-registered custom elements
-            if (customElements.get('customElemName')) { continue; }
+class SectorDisplay extends HTMLElement {
+    constructor() {
+        super();
+        this._templ = new TemplateRenderer(document.querySelector('#sector-display-template'));
+        this._data = null;
+        this.attachShadow({mode: 'open'});
+    }
 
-            var customElem = class extends HTMLElement {
-                constructor() {
-                    super();
-                    this._templ = new TemplateRenderer(elem);
-                    this._viewModel =
-                    this._data = null;
-                    this.attachShadow({mode: 'open'});
-                }
+    set data(d) {
+        this._data = d;
 
-                set data(d) {
-                    this._data = d;
+        var content = this._templ.render(this.data);
 
-                    var content = this._templ.render(this.data);
+        // replace the current content
+        this.shadowRoot._innerHTML = '';
+        this.shadowRoot.appendChild(content);
 
-                    // replace the current content
-                    this.shadowRoot._innerHTML = '';
-                    this.shadowRoot.appendChild(content);
-                }
+        let starmap = this.shadowRoot.querySelector('star-map');
+        let infoPane = this.shadowRoot.querySelector('star-info');
+        starmap.addEventListener('display-info', this.displayInfo.bind(this));
+        infoPane.addEventListener('close-info', this.closeInfo.bind(this));
+    }
 
-                get data() {
-                    return this._data;
-                }
-            }
+    get data() {
+        return this._data;
+    }
 
-            customElements.define(customElemName, customElem);
-        };
+    closeInfo(evt) {
+        let infoPane = this.shadowRoot.querySelector('star-info');
+        infoPane.classList.remove('open');
+
+        let starmap = this.shadowRoot.querySelector('star-map');
+        starmap.classList.remove('info');
+    }
+
+    displayInfo(evt) {
+        // TODO: figure out a good way to make it look like the system
+        // is zooming out of its normal position
+        let starmap = this.shadowRoot.querySelector('star-map');
+        starmap.classList.add('info');
+        let system = starmap.selectedSystem;
+
+        let infoPane = this.shadowRoot.querySelector('star-info');
+        infoPane.data = system;
+        infoPane.classList.add('open');
     }
 }
+
+customElements.define('sector-display', SectorDisplay);
 
 class SectorTable extends HTMLElement {
     constructor() {
@@ -271,9 +287,6 @@ customElements.define("sector-table", SectorTable);
 
         // populate the initial seed
         populateSeed(false);
-
-        // lightweight custom elements and templating
-        TemplateRenderer.initializeCustomElements();
     });
 
     // mainServer is the server to make API requests against.

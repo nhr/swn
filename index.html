@@ -7,6 +7,7 @@
   <link type="text/css" href="css/new.css" rel="stylesheet" />
   <script type="text/javascript" src="js/new.js"></script>
   <script type="text/javascript" src="js/starmap.js"></script>
+  <script type="text/javascript" src="js/starinfo.js"></script>
   <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -15,9 +16,30 @@
       ga('create', 'UA-46174241-1', 'auto');
       ga('send', 'pageview');
   </script>
+  <template id="starinfo-template">
+    <link type="text/css" href="css/starbase.css" rel="stylesheet" />
+    <link type="text/css" href="css/starinfo.css" rel="stylesheet" />
+    <svg id="system-display" xmlns="http://www.w3.org/2000/svg" version="1.1">
+      <defs>
+        <filter id="star-glow" width="200%" height="200%" x="-40%" y="-40%">
+          <feColorMatrix type="matrix" values=
+            "0 0 0 255   0
+             0 0 0 255   0
+             0 0 0 0     0
+             0 0 0 1     0"/>
+          <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+    </svg>
+  </template>
   <template id="starmap-template">
     <link type="text/css" href="css/starmap.css" rel="stylesheet" />
-    <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+    <link type="text/css" href="css/starbase.css" rel="stylesheet" />
+    <svg id="map" xmlns="http://www.w3.org/2000/svg" version="1.1">
       <defs>
         <filter id="star-glow" width="200%" height="200%" x="-40%" y="-40%">
           <feColorMatrix type="matrix" values=
@@ -159,7 +181,7 @@
       </form>
     </header>
     <div id="sector-frame">
-      <template -for="sector-display">
+      <template id="sector-display-template">
         <link type="text/css" href="css/sector-display.css" rel="stylesheet" />
         <tab-panel id="sector">
           <a slot="tab-name">Sector Overview</a></li>
@@ -170,12 +192,14 @@
           <a slot="tab-name">Religions</a></li>
           <a slot="tab-name">Aliens</a></li>
 
-          <div>
+          <div id="overview-panel">
+            <star-info></star-info>
             <header class="sector-name">
               <h1>Sector <span -content="name"></span></h1>
               <span class="starchart-instructions">Click stars to move / swap them</span>
             </header>
-            <star-map columns="8" rows="10" circumradius="40" -from="systems" class="space-theme"></star-map>
+            <star-map columns="8" rows="10" -from="systems" class="space-theme">
+            </star-map>
           </div>
           <sector-table -from='worlds'></sector-table>
           <sector-table columns="2" -from='npcs'></sector-table>

@@ -1,0 +1,86 @@
+/* star base styles */
+.star circle.central-star {
+  stroke: yellow;
+  fill: yellow;
+  stroke-width: 1;
+  filter: url("#star-glow");
+  transform-origin: center;
+  transition: transform 0.25s;
+}
+
+.star text {
+  font-size: 8px;
+  transform: translate(0px, -1em);
+}
+
+/* star move/hover styles */
+svg:not(.move) .star:hover .system, .star.move .system {
+  transform: scale(1.2);
+}
+
+svg:not(.move) .star {
+  cursor: pointer;
+}
+
+/* world styles */
+.world .orbit {
+  stroke: white;
+  fill: none;
+  stroke-width: 0.5;
+  stroke-opacity: 0.3;
+}
+
+.world .planet {
+  fill: blue;
+}
+
+.world {
+  transform: rotateX(0deg);
+}
+
+.world:nth-child(2n) {
+  transform: rotateX(60deg);
+}
+
+.world:nth-child(3n) {
+  transform: rotateY(30deg) rotateX(60deg);
+}
+
+.world:nth-child(2n) > g {
+  transform: rotateZ(120deg);
+}
+
+.world:nth-child(3n) > g {
+  transform: rotateZ(240deg);
+}
+
+/* world orbit animations */
+.world .planet {
+  animation-duration: 4s;
+  animation-name: orbit;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  animation-play-state: paused;
+}
+
+@keyframes orbit {
+  from {
+    transform: rotateZ(0deg);
+  }
+
+  to {
+    transform: rotateZ(360deg);
+  }
+}
+
+.world:nth-child(2n) .planet {
+  animation-duration: 5.5s;
+}
+
+.world:nth-child(3n) .planet {
+  animation-duration: 8s;
+}
+
+svg:not(.move) .star:hover .planet, .star.move .planet {
+  animation-play-state: running;
+}

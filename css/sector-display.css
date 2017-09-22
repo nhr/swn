@@ -36,3 +36,34 @@ tab-panel {
   border: 1px solid lightgrey;
   border-radius: 4px;
 }
+
+/* set a position on this so that our star-info hovers over everything else */
+#overview-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+star-map.info {
+  transition: filter 1s;
+}
+
+star-map.info {
+  filter: grayscale(50%) contrast(20%);
+}
+
+star-info {
+  position: absolute;
+  z-index: 100;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  transition: transform 0.75s;
+  transition-timing-function: cubic-bezier(0.390, -0.290, 0.750, 0.095);
+  transform: scale(0.0);
+}
+
+star-info.open {
+  display: block;
+  transform: scale(1.0);
+  transition-timing-function: cubic-bezier(0.250, 0.905, 0.610, 1.290);
+}
