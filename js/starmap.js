@@ -5,8 +5,11 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 const CIRCUM_TO_INNER = Math.cos(Math.PI/6);
 const CIRCUM_TO_HALFSIDE = Math.sin(Math.PI/6);
 
-const MAX_RING_RADIUS = 30;
-const MIN_RING_RADIUS = 15;
+// determined by what looked good
+const MAX_RING_FACTOR = 0.75;
+const MIN_RING_FACTOR = 0.375;
+const STAR_RADIUS_FACTOR = 0.1875;
+const PLANET_RADIUS_FACTOR = 0.0625;
 
 class StarSystem {
     constructor(name, cell, worlds) {
@@ -48,32 +51,46 @@ class StarSystem {
 class StarSystemRenderer {
     constructor(grid) {
         this._grid = grid;
+
+        // determined by "what looks good"
+        this._maxRingRadius = this._grid.cellSize * MAX_RING_FACTOR;
+        this._starRadius = this._grid.cellSize * STAR_RADIUS_FACTOR;
+        this._minRingRadius = this._grid.cellSize * MIN_RING_FACTOR;
+        this._planetRadius = this._grid.cellSize * PLANET_RADIUS_FACTOR;
     }
 
     svgFor(system) {
-        let pos = this._grid.centerPointFor(system.column, system.row);
+        // within the overall group, we use a fixed coordinate system of the cell size, and then
+        // translate the group to the correct location.
+        let cellCenter = this._grid.centerPointFor(0, 0);
 
         // render the star
-        let star = `<circle cx="${pos[0]}" cy="${pos[1]}" r="7.5"/>`
+        let star = `<circle class="central-star" cx="${cellCenter[0]}" cy="${cellCenter[1]}" r="${this._starRadius}"/>`
 
         // render the label
-        let label = `<text text-anchor="middle" x="${pos[0]}" y="${pos[1]}">${system.name}</text>`
+        let label = `<text text-anchor="middle" x="${cellCenter[0]}" y="${cellCenter[1]+this._grid.cellHeight}">${system.name}</text>`
 
         // render the world rings
-        const ringIncrement = Math.floor((MAX_RING_RADIUS - MIN_RING_RADIUS) / system.worlds.length);
+        const ringIncrement = Math.floor((this._maxRingRadius - this._minRingRadius) / system.worlds.length);
         let worldRings = system.worlds.map((world, ind) => {
-            let ringRadius = MIN_RING_RADIUS + ringIncrement*ind;
+            let ringRadius = this._minRingRadius + ringIncrement*ind;
             return `
-            <g class="world" style="transform-origin: ${pos[0]}px ${pos[1]}px">
-                <circle cx="${pos[0]}" cy="${pos[1]}" r="${ringRadius}" class="orbit"/>
-                <g style="transform-origin: ${pos[0]}px ${pos[1]}px"><circle cx="${pos[0]}" cy="${pos[1]+ringRadius}" r="2.5" class="planet" style="transform-origin: ${pos[0]}px ${pos[1]}px"/></g>
+            <g class="world" style="transform-origin: ${cellCenter[0]}px ${cellCenter[1]}px">
+                <circle cx="${cellCenter[0]}" cy="${cellCenter[1]}" r="${ringRadius}" class="orbit"/>
+                <g style="transform-origin: ${cellCenter[0]}px ${cellCenter[1]}px"><circle cx="${cellCenter[0]}" cy="${cellCenter[1]+ringRadius}" r="${this._planetRadius}" class="planet" style="transform-origin: ${cellCenter[0]}px ${cellCenter[1]}px"/></g>
             </g>
             `
         });
 
+        let centerPos = this._grid.centerPointFor(system.column, system.row);
+        let pos = [centerPos[0] - this._grid.cellWidth, centerPos[1] - this._grid.cellHeight];
         let overallGroup = document.createElementNS(SVG_NS, "g");
-        overallGroup.innerHTML = star+label+`<g>${worldRings.join("\n")}</g>`;
-        overallGroup.style = `transform-origin: ${pos[0]}px ${pos[1]}px`;
+        overallGroup.innerHTML = `<g class="system" style="transform-origin: ${cellCenter[0]}px ${cellCenter[1]}px;">${star}<g>${worldRings.join("\n")}</g></g>${label}`;
+        /*overallGroup.style = `transform-origin: ${cellCenter[0]}px ${cellCenter[1]}px;`;
+        overallGroup.setAttribute('x', pos[0]);
+        overallGroup.setAttribute('y', pos[1]);*/
+        overallGroup.setAttribute('transform', `translate(${pos[0]}, ${pos[1]})`);
+
 
         return overallGroup;
     }
@@ -118,10 +135,26 @@ class SectorHexGrid {
         return points;
     }
 
+    get cellWidth() {
+        return this.cellSize;
+    }
+
+    get cellHeight() {
+        return this._inradius;
+    }
+
     // totalSize returns the total size of the bounding box of the grid.
     get totalSize() {
-        return [(this.columns+1)*this.cellSize+this.columns*this._halfSideLen,
-                this.rows*2*this._inradius+(this._inradius*(this.columns%2))+this._inradius];
+        let lastCenterPoint = this.centerPointFor(this.columns-1, this.rows-1);
+        return [lastCenterPoint[0]+this.cellSize, lastCenterPoint[1]+this._inradius];
+    }
+
+    static cellSizeFor(columns, rows, width, height) {
+        let [unitWidth, unitHeight] = new SectorHexGrid(columns, rows, 1).totalSize;
+        let widthCircumradius = width/unitWidth;
+        let heightCircumradius = height/unitHeight;
+
+        return Math.min(widthCircumradius, heightCircumradius);
     }
 }
 
@@ -163,7 +196,7 @@ class SectorHexGridRenderer {
             let poly = this._hexPolygon(grid, center)
             let label = this._cellLabel(grid, ind%grid.columns, Math.floor(ind/grid.columns));
             label.setAttribute("x", center[0]);
-            label.setAttribute("y", center[1]);
+            label.setAttribute("y", center[1]-grid.cellHeight);
 
             let group = document.createElementNS(SVG_NS, "g");
             group.appendChild(poly);
@@ -185,11 +218,14 @@ class Starmap extends HTMLElement {
         this._gridContainer = svg.getElementById("grid");
         this._starsContainer = svg.getElementById("stars");
         this._container = svg;
+        this._infoPane = shadowRoot.querySelector('star-info');
 
         this._lastGrid = new SectorHexGrid(0, 0, 0);
 
         // handle star clicks
         this._container.addEventListener('click', this._handleClick.bind(this));
+
+        this._systems = null;
     }
 
     get rows() { return parseInt(this.getAttribute('rows')); }
@@ -197,9 +233,6 @@ class Starmap extends HTMLElement {
 
     get columns() { return parseInt(this.getAttribute('columns')); }
     set columns(v) { this.setAttribute('columns', v); }
-
-    get circumradius() { return parseInt(this.getAttribute('circumradius')); }
-    set circumradius(v) { this.setAttribute('circumradius', v); }
 
     static get observedAttributes() {
         return ['rows', 'columns', 'circumradius'];
@@ -225,7 +258,10 @@ class Starmap extends HTMLElement {
     _renderGrid() {
         if (!this._dimensionsChanged) { return; }
 
-        let grid = new SectorHexGrid(this.columns, this.rows, this.circumradius);
+        // we start out with a fixed "virtual" canvas size...
+        let circumradius = SectorHexGrid.cellSizeFor(this.columns, this.rows, this.columns*100, this.rows*100);
+
+        let grid = new SectorHexGrid(this.columns, this.rows, circumradius);
         let renderer = new SectorHexGridRenderer();
         let polys = renderer.svgFor(grid);
         this._gridContainer.innerHTML = '';
@@ -236,9 +272,11 @@ class Starmap extends HTMLElement {
             this._gridContainer.appendChild(poly);
         });
 
-        let containerSize = grid.totalSize;
-        this._container.setAttribute('width', containerSize[0]);
-        this._container.setAttribute('height', containerSize[1]);
+        // ...adjust the viewbox according to the actual extents...
+        let actualCanvasSize = grid.totalSize;
+        this._container.setAttribute("viewBox", `0 0 ${actualCanvasSize[0]} ${actualCanvasSize[1]}`);
+
+        // ...and let the browser handle actual scaling
 
         this._lastGrid = grid;
     }
@@ -252,10 +290,13 @@ class Starmap extends HTMLElement {
             grp.classList.add('star');
             let star = this._starData.stars[ind];
             grp.dataset.starName = star.name;
+            grp.dataset.starId = star.id;
             grp.dataset.starCell = star.cell;
             grp.dataset.starCount = star.count;
             this._starsContainer.appendChild(grp);
         });
+
+        this._systems = systems;
     }
 
     _handleClick(evt) {
@@ -280,11 +321,14 @@ class Starmap extends HTMLElement {
 
         targetStar.classList.remove('move');
 
+        if (!targetHex) { return; }
+
         // make sure to figure out if there was already a star in the target hex, so we can swap
         let existingStarData = this._starData.stars.find((star) => star.cell === targetHex);
 
         // find the data for the star that we're moving
-        let starData = this._starData.stars.find((star) => star.cell === targetStar.dataset.starCell && star.name === targetStar.dataset.starName);
+        let starData = this._starData.stars.find((star) => star.name === targetStar.dataset.starName);
+
 
         starData.cell = targetHex;
         if (existingStarData) {

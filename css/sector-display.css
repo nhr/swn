@@ -1,3 +1,7 @@
+:host {
+  display: block;
+}
+
 .sector-name {
   text-align: center;
   margin-bottom: 10px;
