@@ -18,7 +18,22 @@ thead th {
   background-color: #999;
 }
 
+tbody tr {
+  background-color: white;
+}
+
 tbody tr:nth-child(2n) {
   background-color: #ccc;
 }
 
+tr.highlighted {
+  filter: drop-shadow(0px 0px 4px blue);
+}
+
+:host([interactable]) tr:hover {
+  filter: drop-shadow(0px 0px 2px red);
+}
+
+:host([interactable]) tr {
+  cursor: pointer;
+}

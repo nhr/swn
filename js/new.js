@@ -80,11 +80,16 @@ class TemplateRenderer {
         this._validSelector = this._templateAttrs.map(function(attr) { return '[' + attr + ']'; }).join(', ');
     }
 
-    render(data) {
+    render(data, shadow) {
         let content = this._templ.content.cloneNode(true);
+        if (shadow !== undefined) {
+            shadow.innerHTML = '';
+            shadow.appendChild(content);
+            content = shadow;
+        }
 
         for (let child of content.children) {
-            this._renderNode(child, data);
+            this._renderNode(content, child, data);
         }
 
         return content;
@@ -103,17 +108,32 @@ class TemplateRenderer {
     }
 
     // TODO: trampoline this?
-    _renderNode(node, data) {
+    _renderNode(root, node, data) {
         if (node.hasAttribute('-foreach')) {
             let collection = TemplateRenderer._dataIn(node, '-foreach', data);
 
             let nextInsertionPoint = node.nextSibling;
 
+            let templNode = node;
+            templNode.removeAttribute('-foreach');
+            if (node.hasAttribute('-replace-with')) {
+                let slotName = node.getAttribute('-replace-with');
+                let slot = root.querySelector(`slot[name="${slotName}"]`);
+                let templOptions = slot.assignedNodes({flatten: true})
+                let templ = undefined;
+                for (let opt of templOptions) {
+                    if (opt.nodeType === 1) {
+                        templ = opt;
+                        break;
+                    }
+                }
+                templNode = templ.content.children[0];
+            }
+
             for (let collectionItem of collection) {
-                let newNode = node.cloneNode(true);
+                let newNode = templNode.cloneNode(true);
                 // don't re-process foreach
-                newNode.removeAttribute('-foreach');
-                this._renderNode(newNode, collectionItem);
+                this._renderNode(root, newNode, collectionItem);
 
                 node.parentElement.insertBefore(newNode, nextInsertionPoint.nextSibling);
                 nextInsertionPoint = newNode;
@@ -156,7 +176,7 @@ class TemplateRenderer {
         if (!node.querySelector(this._validSelector)) { return; }
 
         for (let child of node.children) {
-            this._renderNode(child, data);
+            this._renderNode(root, child, data);
         }
     }
 }
@@ -180,17 +200,27 @@ class SectorDisplay extends HTMLElement {
 
         let starmap = this.shadowRoot.querySelector('star-map');
         let infoPane = this.shadowRoot.querySelector('star-info');
-        starmap.addEventListener('display-info', this.displayInfo.bind(this));
+        let worldsTable = this.shadowRoot.querySelector('#worlds-table');
+        let tabPanel = this.shadowRoot.querySelector('#sector');
+        starmap.addEventListener('display-info', (evt) => {
+            this.displayInfo(evt.detail);
+        });
         infoPane.addEventListener('close-info', this.closeInfo.bind(this));
         infoPane.addEventListener('select-world-tag', (evt) => {
             this.closeInfo();
 
-            let tabPanel = this.shadowRoot.querySelector('#sector');
             // TODO: find a good way to select this programatically
             tabPanel.selected = 1; // world panel
 
-            let worldsTable = this.shadowRoot.querySelector('#worlds-table');
             worldsTable.highlight('tags', evt.detail);
+        });
+        worldsTable.addEventListener('click-row', (evt) => {
+            let worldName = evt.detail;
+            let worldInfo = this.data.systems.worlds.find((world) => world.name === worldName);
+            let starInfo = this.data.stars[worldInfo.star_id];
+            let system = starmap.systems.find((sys) => sys.name === starInfo.name);
+            tabPanel.selected = 0;
+            requestAnimationFrame(this.displayInfo.bind(this, system));
         });
     }
 
@@ -206,12 +236,11 @@ class SectorDisplay extends HTMLElement {
         starmap.classList.remove('info');
     }
 
-    displayInfo(evt) {
+    displayInfo(system) {
         // TODO: figure out a good way to make it look like the system
         // is zooming out of its normal position
         let starmap = this.shadowRoot.querySelector('star-map');
         starmap.classList.add('info');
-        let system = starmap.selectedSystem;
 
         let infoPane = this.shadowRoot.querySelector('star-info');
         infoPane.data = system;
@@ -232,13 +261,15 @@ class SectorTable extends HTMLElement {
     set data(d) {
         this._data = d;
 
-        var content = this._templ.render(this.dataWithColumns);
+        var content = this._templ.render(this.dataWithColumns, this.shadowRoot);
         let wrapperDiv = content.getElementById('columns-wrapper');
         wrapperDiv.style.setProperty('--columns', this.columns);
 
-        // replace the current content
-        this.shadowRoot._innerHTML = '';
-        this.shadowRoot.appendChild(content);
+        // TODO: handle addition and removal of the interactable attribute?
+        content.querySelectorAll('tbody tr').forEach((row) => row.addEventListener('click', (evt) => {
+            let rowId = evt.target.closest('tr').dataset.rowId;
+            this.dispatchEvent(new CustomEvent('click-row', {detail: rowId, bubbles: false}));
+        }));
     }
 
     get data() {
@@ -269,6 +300,13 @@ class SectorTable extends HTMLElement {
     }
 
     highlight(dataName, value) {
+        this.shadowRoot.querySelectorAll('.highlighted').forEach((row) => {
+            row.classList.remove('highlighted');
+        });
+        // TODO: make the tags space-safe for later use
+        this.shadowRoot.querySelectorAll(`tr[data-row-${dataName}*="${value}"]`).forEach((row) => {
+            row.classList.add('highlighted');
+        });
     }
 }
 

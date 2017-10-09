@@ -225,8 +225,6 @@ class Starmap extends HTMLElement {
         this._container.addEventListener('click', this._handleClick.bind(this));
 
         this._systems = null;
-
-        this._selectedSystem = null;
     }
 
     get rows() { return parseInt(this.getAttribute('rows')); }
@@ -311,18 +309,13 @@ class Starmap extends HTMLElement {
         }
     }
 
-    get selectedSystem() {
-        return this._selectedSystem;
-    }
-
     _showStarInfo(starElem) {
         this._endStarMove()
         starElem.classList.add('info');
 
         // show the info pane
         let system = this._systems.find((sys) => sys.name === starElem.dataset.starName);
-        this._selectedSystem = system;
-        this.dispatchEvent(new Event('display-info', {bubbles: false}));
+        this.dispatchEvent(new CustomEvent('display-info', {detail: system, bubbles: false}));
     }
 
 
@@ -364,6 +357,10 @@ class Starmap extends HTMLElement {
 
     get data() {
         return this._starData;
+    }
+
+    get systems() {
+        return this._systems;
     }
 }
 
