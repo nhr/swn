@@ -74,12 +74,13 @@ section.world {
   display: grid;
   grid-template-columns: 1fr 0;
   border-top: 2px solid grey;
+  grid-column-gap: 2em;
 }
 
 section.world.selected {
   flex: 1;
   overflow-y: scroll;
-  grid-template-columns: 1fr 12em;
+  grid-template-columns: 1fr 15em;
 }
 
 section.world > aside {
@@ -122,7 +123,7 @@ section.world > header > h3 {
 
 .tags li {
   margin-top: 0.5em;
-  padding-left: 2em;
+  padding-left: 5em;
 }
 
 .tags li a:hover {
@@ -135,6 +136,14 @@ section.world > header > h3 {
 
 table.world-desc {
   margin-top: 1em;
+  border-right: 2px solid black;
+  margin-left: auto;
+  background: rgba(0, 0, 0, 0.1);
+  padding: 0.5em;
+}
+
+table.world-desc td:first-child {
+  font-weight: bold;
 }
 
 /* this defines a nifty price-tag shape for our tags */
