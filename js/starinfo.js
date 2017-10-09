@@ -7,6 +7,8 @@ class StarInfo extends HTMLElement {
         this.attachShadow({mode: 'open'});
 
         this._container = null;
+        this._systemContainer = null;
+        this._calloutContainer = null;
     }
 
     connectedCallback() {
@@ -30,6 +32,7 @@ class StarInfo extends HTMLElement {
         this.shadowRoot.appendChild(content);
 
         this._container = this.shadowRoot.querySelector('svg');
+        this._systemContainer = this._container.querySelector('#system');
 
         // use a fixed cell size of 100, and the browser handle scaling
         let grid = new SectorHexGrid(1, 1, 100);
@@ -40,12 +43,51 @@ class StarInfo extends HTMLElement {
         let renderedSystem = systemRenderer.svgFor(this.data);
         renderedSystem.removeAttribute('transform');
         renderedSystem.classList.add('star');
+        renderedSystem.querySelectorAll('.world').forEach((world, ind) => {
+            let worldInfo = this.data.worlds[ind];
+            world.dataset.worldName = worldInfo.name;
+            world.dataset.positionInSystem = worldInfo.sys_pos;
+        });
+        this._systemContainer.appendChild(renderedSystem);
 
-        this._container.appendChild(renderedSystem);
+        this._setupEventListeners();
+        this.selectWorld(this.data.worlds[0].name);
+    }
+    
+    selectWorld(worldName) {
+        this.shadowRoot.querySelectorAll('#world-info .world').forEach((worldSection) => {
+            worldSection.classList.remove('selected');
+        });
 
-        this._container.querySelector('.star').addEventListener('click', () => {
+        this._systemContainer.querySelectorAll('.world').forEach((worldSection) => {
+            worldSection.classList.remove('selected');
+        });
+
+        let worldInfo = this.data.worlds.find((world) => worldName === world.name);
+        let worldSection = this.shadowRoot.querySelector(`#world-info .world[data-world-name="${worldInfo.name}"]`);
+        let worldElem = this._systemContainer.querySelector(`.world[data-world-name="${worldInfo.name}"]`);
+        worldSection.classList.add('selected');
+        worldElem.classList.add('selected');
+    }
+
+    _setupEventListeners() {
+
+        this._container.querySelector('.star .central-star').addEventListener('click', () => {
             this.dispatchEvent(new Event('close-info', {bubbles: false}));
         });
+
+        this.shadowRoot.querySelectorAll('svg .star .world, section.world > header').forEach((worldElem) => worldElem.addEventListener('click', (evt) => {
+            let worldElem = evt.target.closest('.world');
+            let worldName = worldElem.dataset.worldName;
+
+            this.selectWorld(worldName);
+        }));
+
+        this.shadowRoot.querySelectorAll('.tags a').forEach((tag) => tag.addEventListener('click', (evt) => {
+            let tag = evt.target.dataset.tagSelector;
+            
+            this.dispatchEvent(new CustomEvent('select-world-tag', {detail: tag, bubbles: false}));
+        }));
     }
 }
 

@@ -77,7 +77,7 @@ class StarSystemRenderer {
             return `
             <g class="world" style="transform-origin: ${cellCenter[0]}px ${cellCenter[1]}px">
                 <circle cx="${cellCenter[0]}" cy="${cellCenter[1]}" r="${ringRadius}" class="orbit"/>
-                <g style="transform-origin: ${cellCenter[0]}px ${cellCenter[1]}px"><circle cx="${cellCenter[0]}" cy="${cellCenter[1]+ringRadius}" r="${this._planetRadius}" class="planet" style="transform-origin: ${cellCenter[0]}px ${cellCenter[1]}px"/></g>
+                <g class="planet-wrapper" style="transform-origin: ${cellCenter[0]}px ${cellCenter[1]}px"><circle cx="${cellCenter[0]}" cy="${cellCenter[1]+ringRadius}" r="${this._planetRadius}" class="planet" style="transform-origin: ${cellCenter[0]}px ${cellCenter[1]}px"/></g>
             </g>
             `
         });

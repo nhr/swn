@@ -19,22 +19,95 @@
   <template id="starinfo-template">
     <link type="text/css" href="css/starbase.css" rel="stylesheet" />
     <link type="text/css" href="css/starinfo.css" rel="stylesheet" />
-    <svg id="system-display" xmlns="http://www.w3.org/2000/svg" version="1.1">
-      <defs>
-        <filter id="star-glow" width="200%" height="200%" x="-40%" y="-40%">
-          <feColorMatrix type="matrix" values=
-            "0 0 0 255   0
-             0 0 0 255   0
-             0 0 0 0     0
-             0 0 0 1     0"/>
-          <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-          <feMerge>
-            <feMergeNode in="coloredBlur"/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-      </defs>
-    </svg>
+    <article>
+      <section id="system-display">
+        <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+          <defs>
+            <filter id="star-glow" width="200%" height="200%" x="-40%" y="-40%">
+              <feColorMatrix type="matrix" values=
+                "0 0 0 255   0
+                 0 0 0 255   0
+                 0 0 0 0     0
+                 0 0 0 1     0"/>
+              <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <g id="system">
+          </g>
+        </svg>
+      </section>
+      <section id="world-info">
+        <section class="world" -foreach="worlds" -attrs="data-world-name" data-world-name="name">
+          <header>
+            <h2 -content="name" class="planet-name"></h2>
+            <h3 -content="sys_num" class="system-designation"></h3>
+          </header>
+          <aside>
+            <nav class="tags">
+              <ul>
+                <li -foreach="tags"><a -content="short" -attrs="title data-tag-selector" data-tag-selector="short" title="desc"></a></li>
+              </ul>
+            </nav>
+            <table class="world-desc">
+              <tr -with="atmosphere">
+                <td>Atmosphere</td>
+                <td -content="short" -attrs="title" title="desc"></td>
+              </tr>
+              <tr -with="biosphere">
+                <td>Biosphere</td>
+                <td -content="short" -attrs="title" title="desc"></td>
+              </tr>
+              <tr -with="population">
+                <td>Population</td>
+                <td -content="short" -attrs="title" title="desc"></td>
+              </tr>
+              <tr -with="tech_level">
+                <td>Tech Level</td>
+                <td -content="short" -attrs="title" title="desc"></td>
+              </tr>
+              <tr -with="temperature">
+                <td>Temperature</td>
+                <td -content="short" -attrs="title" title="desc"></td>
+              </tr>
+            </table>
+          </aside>
+          <section>
+            <header><h4>Enemies</h4></header>
+            <ul>
+              <li -foreach="tags"><span -content="enemies"></span></li>
+            </ul>
+          </section>
+          <section>
+            <header><h4>Friends</h4></header>
+            <ul>
+              <li -foreach="tags"><span -content="friends"></span></li>
+            </ul>
+          </section>
+          <section>
+            <header><h4>Places</h4></header>
+            <ul>
+              <li -foreach="tags"><span -content="places"></span></li>
+            </ul>
+          </section>
+          <section>
+            <header><h4>Things</h4></header>
+            <ul>
+              <li -foreach="tags"><span -content="things"></span></li>
+            </ul>
+          </section>
+          <section>
+            <header><h4>Complications</h4></header>
+            <ul>
+              <li -foreach="tags"><span -content="complications"></span></li>
+            </ul>
+          </section>
+        </section>
+      </section>
+    </article>
   </template>
   <template id="starmap-template">
     <link type="text/css" href="css/starmap.css" rel="stylesheet" />
@@ -201,7 +274,7 @@
             <star-map columns="8" rows="10" -from="systems" class="space-theme">
             </star-map>
           </div>
-          <sector-table -from='worlds'></sector-table>
+          <sector-table -from='worlds' id="worlds-table"></sector-table>
           <sector-table columns="2" -from='npcs'></sector-table>
           <sector-table columns="2" -from='corps'></sector-table>
           <sector-table -from='pols'></sector-table>

@@ -76,7 +76,7 @@ class TemplateRenderer {
     constructor(templ) {
         // the template element
         this._templ = templ;
-        this._templateAttrs = ['-from', '-content', '-foreach'];
+        this._templateAttrs = ['-from', '-content', '-foreach', '-attrs', '-with'];
         this._validSelector = this._templateAttrs.map(function(attr) { return '[' + attr + ']'; }).join(', ');
     }
 
@@ -90,16 +90,22 @@ class TemplateRenderer {
         return content;
     }
 
+    static _dataIn(node, attr, data) {
+        let targetKey = node.getAttribute(attr);
+        let newData = null;
+        if (targetKey) {
+            newData = data[targetKey];
+        } else {
+            newData = data;
+        }
+
+        return newData;
+    }
+
     // TODO: trampoline this?
     _renderNode(node, data) {
         if (node.hasAttribute('-foreach')) {
-            let targetKey = node.getAttribute('-foreach');
-            let collection = null;
-            if (targetKey) {
-                collection = data[targetKey];
-            } else {
-                collection = data;
-            }
+            let collection = TemplateRenderer._dataIn(node, '-foreach', data);
 
             let nextInsertionPoint = node.nextSibling;
 
@@ -120,30 +126,27 @@ class TemplateRenderer {
         }
 
         if (node.hasAttribute('-from')) {
-            let fromKey = node.getAttribute('-from');
-            let fromData = null;
-            if (fromKey) {
-                fromData = data[fromKey];
-            } else {
-                fromData = data;
-            }
-
+            let fromData = TemplateRenderer._dataIn(node, '-from', data);
             customElements.whenDefined(node.tagName.toLowerCase()).then(() => {
                 node.data = fromData;
             });
         }
 
         if (node.hasAttribute('-content')) {
-            // if contentKey is empty, use the current context as content
-            let contentKey = node.getAttribute('-content');
-            let content = null;
-            if (contentKey) {
-                content = data[contentKey];
-            } else {
-                content = data;
-            }
-
+            let content = TemplateRenderer._dataIn(node, '-content', data);
             node.innerText = content;
+        }
+
+        if (node.hasAttribute('-with')) {
+            data = TemplateRenderer._dataIn(node, '-with', data);
+        }
+
+        if (node.hasAttribute('-attrs')) {
+            let attrsList = node.getAttribute("-attrs").split(" ");
+            for (let attrName of attrsList) {
+                let content = TemplateRenderer._dataIn(node, attrName, data);
+                node.setAttribute(attrName, content);
+            }
         }
 
         for (let attr of this._templateAttrs) {
@@ -179,6 +182,16 @@ class SectorDisplay extends HTMLElement {
         let infoPane = this.shadowRoot.querySelector('star-info');
         starmap.addEventListener('display-info', this.displayInfo.bind(this));
         infoPane.addEventListener('close-info', this.closeInfo.bind(this));
+        infoPane.addEventListener('select-world-tag', (evt) => {
+            this.closeInfo();
+
+            let tabPanel = this.shadowRoot.querySelector('#sector');
+            // TODO: find a good way to select this programatically
+            tabPanel.selected = 1; // world panel
+
+            let worldsTable = this.shadowRoot.querySelector('#worlds-table');
+            worldsTable.highlight('tags', evt.detail);
+        });
     }
 
     get data() {
@@ -245,7 +258,6 @@ class SectorTable extends HTMLElement {
     get dataWithColumns() {
         let cols = [];
         let splitPoint = Math.floor(this._data.data.length / this.columns);
-        let lastCol = undefined;
         for (let i = 0; i < this.columns; i++) {
             cols.push({
                 headers: this._data.headers,
@@ -254,6 +266,9 @@ class SectorTable extends HTMLElement {
         }
 
         return cols;
+    }
+
+    highlight(dataName, value) {
     }
 }
 

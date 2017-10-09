@@ -43,7 +43,7 @@ tab-panel {
   overflow: hidden;
 }
 
-star-map.info {
+star-map {
   transition: filter 1s;
 }
 

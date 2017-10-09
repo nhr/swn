@@ -2,10 +2,163 @@
   display: block;
 }
 
-.star text {
+svg .star text {
   stroke: black;
   stroke-width: 0.5;
   fill: white;
   font-size: 15pt;
   transform: translate(0px, -7em);
+}
+
+#system-display svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+svg .world.selected .planet {
+  stroke: #5656f5;
+  stroke-width: 2px;
+  stroke-opacity: 0.75;
+}
+
+svg .world.selected .orbit {
+  stroke-width: 0.80;
+}
+
+svg .world:not(.selected):hover .planet {
+  stroke: #5656f5;
+  stroke-width: 1px;
+  stroke-opacity: 0.75;
+}
+
+svg .world:not(.selected):hover .orbit {
+  stroke-width: 0.75;
+}
+
+article {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* world orbit animation trigger (only when you hover on the star itself */
+#system-display .central-star:hover ~ g .world .planet {
+  animation-play-state: running;
+}
+
+#system-display .central-star:hover {
+  transform: scale(1.05);
+}
+
+#system-display {
+  width: 75%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#world-info {
+  display: flex;
+  flex-direction: column;
+  background: rgba(158, 158, 158, 0.90);
+  flex: 1;
+}
+
+section.world {
+  flex: 0;
+  overflow: hidden;
+  transition: 1s flex, 1s grid-template-columns;
+  min-height: 4em; /* height of the header */
+
+  /* TODO: add Edge prefixes */
+  display: grid;
+  grid-template-columns: 1fr 0;
+  border-top: 2px solid grey;
+}
+
+section.world.selected {
+  flex: 1;
+  overflow-y: scroll;
+  grid-template-columns: 1fr 12em;
+}
+
+section.world > aside {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  padding-right: 0.2em;
+  position: sticky;
+  top: 0;
+}
+
+section.world > section {
+  grid-column: 1;
+}
+
+section.world > header {
+  grid-column: 1 / span 2;
+  background: lightgrey;
+  grid-row: 1;
+  cursor: pointer;
+  position: sticky;
+  top: 0;
+}
+
+section.world > header > h2 {
+  display: inline-block;
+  margin-left: 0.5em;
+}
+
+section.world > header > h3 {
+  display: inline-block;
+  vertical-align: super;
+  font-size: 1em;
+}
+
+.tags ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tags li {
+  margin-top: 0.5em;
+  padding-left: 2em;
+}
+
+.tags li a:hover {
+  left: -0.5em;
+}
+
+.tags a {
+  cursor: pointer;
+}
+
+table.world-desc {
+  margin-top: 1em;
+}
+
+/* this defines a nifty price-tag shape for our tags */
+.tags li a {
+  height: 1.5em;
+  vertical-align: middle;
+  position: relative;
+  line-height: 1.5em;
+  background: grey;
+  display: block;
+  text-align: center;
+  border-top-right-radius: 0.5em;
+  border-bottom-right-radius: 0.5em;
+}
+
+.tags li a::before {
+  border-right: 1.0em solid grey;
+  border-left: 1.0em solid transparent;
+  border-bottom: 0.75em solid transparent;
+  border-top: 0.75em solid transparent;
+  display: inline-block;
+  width: 0px;
+  height: 0px;
+  content: "";
+  position: absolute;
+  left: -2em;
 }

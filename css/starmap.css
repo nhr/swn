@@ -52,3 +52,14 @@ svg.move .hex:hover polygon {
   z-index: 100;
   transform: scale(0.95);
 }
+
+/* world orbit animation trigger */
+svg:not(.move) .star:hover .planet, .star.move .planet {
+  animation-play-state: running;
+}
+
+/* star move/hover styles */
+svg:not(.move) .star:hover .system, .star.move .system {
+  transform: scale(1.2);
+}
+
