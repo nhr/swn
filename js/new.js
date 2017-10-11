@@ -217,7 +217,7 @@ class SectorDisplay extends HTMLElement {
         worldsTable.addEventListener('click-row', (evt) => {
             let worldName = evt.detail;
             let worldInfo = this.data.systems.worlds.find((world) => world.name === worldName);
-            let starInfo = this.data.stars[worldInfo.star_id];
+            let starInfo = this.data.stars.find((star) => star.id === worldInfo.star_id);
             let system = starmap.systems.find((sys) => sys.name === starInfo.name);
             tabPanel.selected = 0;
             requestAnimationFrame(this.displayInfo.bind(this, system));
@@ -338,8 +338,19 @@ customElements.define("sector-table", SectorTable);
             evt.preventDefault();
         });
 
+        SystemListDB.open().then((db) => db.list()).then((systems) => {
+            let datalist = $('#existing-systems');
+            systems.forEach((system) => {
+                let opt = document.createElement('option');
+                opt.setAttribute('value', system.seed);
+                opt.setAttribute('label', system.name);
+                datalist.appendChild(opt);
+            });
+        });
         // populate the initial seed
         populateSeed(false);
+
+        // TODO: populate from the database if possible on seed id field change
     });
 
     // mainServer is the server to make API requests against.
@@ -401,6 +412,13 @@ customElements.define("sector-table", SectorTable);
             currentDisplay.parentElement.removeChild(currentDisplay);
         }
 
+        let seed = $('#seed-id').value;
+        if (!$('#existing-systems').querySelector(`[value="${seed}"]`)) {
+            let opt = document.createElement('option');
+            opt.setAttribute('value', seed);
+            opt.setAttribute('label', obj.name);
+            $('#existing-systems').appendChild(opt);
+        }
         $('#sector-frame').appendChild(newDisplay);
     }
 
@@ -413,9 +431,24 @@ customElements.define("sector-table", SectorTable);
             return;
         }
         let seed = seedInput.value;
+
+        let existingOpt = $('#existing-systems').querySelector(`[value="${seed}"]`);
+        if (existingOpt) {
+            let db = new SystemDB(seed, existingOpt.getAttribute('label'));
+            db.open().then(() => db.fullSector()).then((systems) => populateSectorFrom(new SectorView(systems, systems.name))).catch((evt) => {
+                console.error(`unable to load sector for seed ${seed}: `, evt);
+                displayError(`unable to load sector for seed ${seed}`);
+            });
+            return;
+        }
+
         getSectorForSeed(document.mainServer, seed)
             .then(function(sector) {
-                populateSectorFrom(sector);
+                populateSectorFrom(new SectorView(sector.systems, sector.name));
+                window._db = new SystemDB(seed, sector.name);
+                return window._db.open().then(() => {
+                    return window._db.populate(sector.systems);
+                });
             }).catch(function(evt) {
                 console.error(`unable to fetch sector for seed ${seed}: `, evt);
                 displayError(`unable to fetch sector for seed ${seed}`);

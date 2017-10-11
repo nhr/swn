@@ -9,6 +9,8 @@
   <script type="text/javascript" src="js/new.js"></script>
   <script type="text/javascript" src="js/starmap.js"></script>
   <script type="text/javascript" src="js/starinfo.js"></script>
+  <script type="text/javascript" src="js/view-models.js"></script>
+  <script type="text/javascript" src="js/systems-db.js"></script>
   <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -255,9 +257,11 @@
       <hr />
       <form id="generator">
         <label for="seed-id">Seed ID</label>
-        <input name="seed-id" id="seed-id" type="text" size="7" value="" required maxlength="7" pattern="^[0-9A-Za-z]+$"/>
+        <input name="seed-id" id="seed-id" type="text" size="7" value="" required maxlength="7" pattern="^[0-9A-Za-z]+$" list="existing-systems"/>
         <input id="reroll-button" type="button" value="Re-Roll"/>
         <input id="gen-sec-button" type="submit" value="Generate Sector &gt;&gt;"/>
+        <datalist id="existing-systems">
+        </datalist>
       </form>
     </header>
     <div id="sector-frame">
