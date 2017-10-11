@@ -893,11 +893,14 @@ sub _gen_world {
 		  tech_level  => _gen_world_component( dbh => $dbh, type => 'tech_level'  ),
 		  temperature => _gen_world_component( dbh => $dbh, type => 'temperature' ),
 		  tags        => [],
+          tag_names   => [],
                 };
 
     my $tag1 = _gen_world_tag( dbh => $dbh );
     my $tag2 = _gen_world_tag( dbh => $dbh, skip => $tag1->{roll} );
     push @{$world->{tags}}, $tag1, $tag2;
+    push @{$world->{tag_names}}, $tag1->{name};
+    push @{$world->{tag_names}}, $tag2->{name};
 
     return $world;
 }
