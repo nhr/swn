@@ -13,7 +13,7 @@ use CGI qw(:standard);
 use Data::Dumper;
 use DBI;
 use JSON;
-use SWN2WIKI;
+#use SWN2WIKI;
 use SWNGen;
 use SWNUtil;
 
@@ -23,6 +23,7 @@ my $token   = $q->param('token');
 my $isie    = $q->param('isie');
 my $instars = $q->param('stars');
 my $to_pdf  = $q->param('pdf') || 0;
+my $advanced = $q->param('advanced') || 0;
 
 my $usemap = (defined $instars) ? from_json($instars) : [];
 
@@ -54,108 +55,133 @@ $star_map = $usemap
 # For IE, the data URI doesn't work; don't bother sending it over the wire.
 my $map;
 ($map) = render_map( sector_name => $sector_name,
-		     star_map    => $star_map,
+                     star_map    => $star_map,
                     )
     unless $isie;
 
 # Prepare some data for easier transmission.
 
 my $sector = { name    => [$sector_name],
-	       token   => $token,
-	       map     => $map,
+               token   => $token,
+               map     => $map,
                stars   => $star_map,
              };
 
+if ($advanced) {
+    $sector->{systems} = {
+        'worlds' => \@$worlds,
+        'npcs' => \@$npcs,
+        'corps' => \@$corps,
+        'rels' => \@$rels,
+        'pols' => \@$pols,
+        'aliens' => \@$aliens,
+        'stars' => $star_map,
+    };
+}
+
 if ($action eq 'display') {
-    my @ntbl = (['Name','M/F','Age','Height']);
+    my @nhdr = ('Name','M/F','Age','Height');
+    my @ntbl = ();
     foreach my $npc (sort { $a->{sort} cmp $b->{sort} } @$npcs) {
-	my $row = [ $npc->{name},
-		    substr($npc->{gender}, 0, 1),
-		    $npc->{age},
-		    $npc->{height},
-	          ];
-	push @ntbl, $row;
+        my $row = [ $npc->{name},
+                    substr($npc->{gender}, 0, 1),
+                    $npc->{age},
+                    $npc->{height},
+                  ];
+        push @ntbl, $row;
     }
 
-    my @ctbl = (['Company','Business']);
+    my @chdr = ('Company','Business');
+    my @ctbl = ();
     foreach my $c (sort { $a->{name} cmp $b->{name} } @$corps) {
-	push @ctbl, [ $c->{name}, $c->{business} ];
+        push @ctbl, [ $c->{name}, $c->{business} ];
     }
 
-    my @rtbl = (['Name','Leadership']);
+    my @rhdr = ('Name','Leadership');
+    my @rtbl = ();
     foreach my $r (sort { $a->{name} cmp $b->{name} } @$rels) {
-	my ($l) = split '\.', $r->{leadership};
-	push @rtbl, [$r->{name}, $l];
+        my ($l) = split '\.', $r->{leadership};
+        push @rtbl, [$r->{name}, $l];
     }
 
-    my @ptbl = (['Organization','Leadership','Policy','Outsiders','Issues']);
+    my @phdr = ('Organization','Leadership','Policy','Outsiders','Issues');
+    my @ptbl = ();
     foreach my $p (sort { $a->{name} cmp $b->{name} } @$pols) {
         my ($le) = split ':', $p->{leadership};
         my ($pl) = split ':', $p->{policy};
-	my ($re) = split ':', $p->{relationship};
-	my $row = [ $p->{name},
-		    $le,
-		    $pl,
-		    $re,
-		    $p->{issues}[0]{tag}.', '.$p->{issues}[1]{tag},
-	          ];
-	push @ptbl, $row;
-		    
+        my ($re) = split ':', $p->{relationship};
+        my $row = [ $p->{name},
+                    $le,
+                    $pl,
+                    $re,
+                    $p->{issues}[0]{tag}.', '.$p->{issues}[1]{tag},
+                  ];
+        push @ptbl, $row;
+
     }
 
-    my @wtbl = (['Name','Atmo.','Temp.','Biosphere','Population','TL','Tags']);
+    my @whdr = ('Name','Atmo.','Temp.','Biosphere','Population','TL','Tags');
+    my @wtbl = ();
     foreach my $w (sort { $a->{name} cmp $b->{name} } @$worlds) {
-	my $row = [ $w->{name},
-		    $w->{atmosphere}{short},
-		    $w->{temperature}{short},
-		    $w->{biosphere}{short},
-		    $w->{population}{short},
-		    $w->{tech_level}{short},
-		    $w->{tags}[0]{short}.', '.$w->{tags}[1]{short},
-	          ];
-	push @wtbl, $row;
+        my $row = [ $w->{name},
+                    $w->{atmosphere}{short},
+                    $w->{temperature}{short},
+                    $w->{biosphere}{short},
+                    $w->{population}{short},
+                    $w->{tech_level}{short},
+                    $w->{tags}[0]{short}.', '.$w->{tags}[1]{short},
+                  ];
+        push @wtbl, $row;
     }
 
-    my @atbl = (['Name','Body Type','Lenses','Structure']);
+    my @ahdr = ('Name','Body Type','Lenses','Structure');
+    my @atbl = ();
     foreach my $a (sort { $a->{name} cmp $b->{name} } @$aliens) {
-	my $btxt = (int @{$a->{body}} > 1) ? $a->{body}[0][0].', '.$a->{body}[1][0]
-	    : $a->{body}[0][0];
-	my $ltxt = $a->{lens}[0][0].', '.$a->{lens}[1][0];
-	my $stxt = (int @{$a->{social}} > 1) ? 'Multiple' : $a->{social}[0][0];
-	push @atbl, [$a->{name}, $btxt, $ltxt, $stxt];
+        my $btxt = (int @{$a->{body}} > 1) ? $a->{body}[0][0].', '.$a->{body}[1][0]
+            : $a->{body}[0][0];
+        my $ltxt = $a->{lens}[0][0].', '.$a->{lens}[1][0];
+        my $stxt = (int @{$a->{social}} > 1) ? 'Multiple' : $a->{social}[0][0];
+        push @atbl, [$a->{name}, $btxt, $ltxt, $stxt];
     }
 
-    $sector->{worlds} = \@wtbl;
-    $sector->{npcs}   = \@ntbl;
-    $sector->{corps}  = \@ctbl;
-    $sector->{rels}   = \@rtbl;
-    $sector->{pols}   = \@ptbl;
-    $sector->{aliens} = \@atbl;
+    my %wobj = ('headers' => \@whdr, 'data' => \@wtbl,);
+    my %nobj = ('headers' => \@nhdr, 'data' => \@ntbl,);
+    my %cobj = ('headers' => \@chdr, 'data' => \@ctbl,);
+    my %robj = ('headers' => \@rhdr, 'data' => \@rtbl,);
+    my %pobj = ('headers' => \@phdr, 'data' => \@ptbl,);
+    my %aobj = ('headers' => \@ahdr, 'data' => \@atbl,);
+
+    $sector->{worlds} = \%wobj;
+    $sector->{npcs}   = \%nobj;
+    $sector->{corps}  = \%cobj;
+    $sector->{rels}   = \%robj;
+    $sector->{pols}   = \%pobj;
+    $sector->{aliens} = \%aobj;
 
     my $jtxt = to_json($sector);
     print header('application/json');
     print $jtxt;
 }
 elsif ($action eq 'create') {
-    $sector->{npcs}   = $npcs;
-    $sector->{name}   = $sector_name;
-    $sector->{map}    = $star_map;
-    $sector->{worlds} = $worlds;
-    $sector->{corps}  = $corps;
-    $sector->{rels}   = $rels;
-    $sector->{pols}   = $pols;
-    $sector->{aliens} = $aliens;
+    #$sector->{npcs}   = $npcs;
+    #$sector->{name}   = $sector_name;
+    #$sector->{map}    = $star_map;
+    #$sector->{worlds} = $worlds;
+    #$sector->{corps}  = $corps;
+    #$sector->{rels}   = $rels;
+    #$sector->{pols}   = $pols;
+    #$sector->{aliens} = $aliens;
 
-    my $zipfile = generate_wiki( sector => $sector,
-				 time   => time,
-				 for_ie => $isie,
-				 cgi    => 1,
-	                       );
+    #my $zipfile = generate_wiki( sector => $sector,
+        #                        time   => time,
+        #                        for_ie => $isie,
+        #                        cgi    => 1,
+        #                       );
 
-    print header( -type                => 'application/zip',
-	          -Content_Disposition => 'attachment;filename=SWN_Generator_'.$token.'.zip',
-	        );
-    print $zipfile;
+    #print header( -type                => 'application/zip',
+        #          -Content_Disposition => 'attachment;filename=SWN_Generator_'.$token.'.zip',
+        #        );
+    #print $zipfile;
 }
 
 exit;

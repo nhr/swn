@@ -1,0 +1,77 @@
+/* star base styles */
+svg .star circle.central-star {
+  stroke: yellow;
+  fill: yellow;
+  stroke-width: 1;
+  filter: url("#star-glow");
+  transform-origin: center;
+}
+
+svg .star text {
+  font-size: 8px;
+  transform: translate(0px, -1em);
+}
+
+/* world styles */
+svg .world .orbit {
+  stroke: white;
+  fill: none;
+  stroke-width: 0.5;
+  stroke-opacity: 0.3;
+}
+
+svg .world .planet {
+  fill: blue;
+}
+
+svg .world {
+  transform: rotateX(0deg);
+}
+
+svg .world:nth-child(2n) {
+  transform: rotateX(60deg);
+}
+
+svg .world:nth-child(3n) {
+  transform: rotateY(30deg) rotateX(60deg);
+}
+
+svg .world:nth-child(2n) > g {
+  transform: rotateZ(120deg);
+}
+
+svg .world:nth-child(3n) > g {
+  transform: rotateZ(240deg);
+}
+
+/* world orbit animations */
+svg .world .planet {
+  animation-duration: 4s;
+  animation-name: orbit;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  animation-play-state: paused;
+}
+
+@keyframes orbit {
+  from {
+    transform: rotateZ(0deg);
+  }
+
+  to {
+    transform: rotateZ(360deg);
+  }
+}
+
+svg .world:nth-child(2n) .planet {
+  animation-duration: 5.5s;
+}
+
+svg .world:nth-child(3n) .planet {
+  animation-duration: 8s;
+}
+
+.star {
+  cursor: pointer;
+}
+

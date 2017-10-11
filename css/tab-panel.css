@@ -1,0 +1,86 @@
+#tabs {
+  display: flex;
+  user-select: none;
+  padding-top: 0.2em;
+  padding-left: 0.2em;
+  padding-right: 0.2em;
+
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  margin-top: 0.2em;
+  margin-right: 0.2em;
+  margin-left: 0.2em;
+  background-color: #ccc;
+}
+
+#tabs > ::slotted(*) {
+  flex: 1;
+  height: 2em;
+  text-align: center;
+  display: block;
+  vertical-align: middle;
+  line-height: 2em;
+
+  background-color: #e6e6e6;
+  border-top: 1px solid #aaa;
+  border-left: 1px solid #aaa;
+  border-right: 1px solid #aaa;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+
+  margin-left: 2px;
+  margin-right: 2px;
+
+  cursor: pointer;
+
+  /* allows for overriding the bottom border later */
+  position: relative;
+  top: 1px;
+}
+
+#tabs > ::slotted([aria-selected="false"]) {
+  border-top: 1px solid #d3d3d3;
+  border-left: 1px solid #d3d3d3;
+  border-right: 1px solid #d3d3d3;
+}
+
+#tabs > ::slotted([aria-selected="true"]) {
+  background-color: white;
+  border-top: 1px solid #aaa;
+  border-left: 1px solid #aaa;
+  border-right: 1px solid #aaa;
+
+  border-bottom: 1px solid white;
+}
+
+#tabs > ::slotted([aria-selected]:focus) {
+  outline: none;
+}
+
+#tabs > ::slotted([aria-selected="true"]:focus) {
+  background-color: white;
+}
+
+#tabs > ::slotted([aria-selected="false"]:hover) {
+  border-top: 1px solid #999999;
+  border-left: 1px solid #999999;
+  border-right: 1px solid #999999;
+}
+
+#panels {
+  padding: 1em 1.4em;
+  overflow: auto;
+}
+
+#panels > ::slotted([aria-hidden="true"]) {
+  display: none;
+}
+
+#panels > ::slotted([aria-hidden="false"]:focus) {
+  outline: none;
+}
+
+:host {
+  background: white;
+  display: block;
+}

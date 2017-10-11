@@ -1,0 +1,65 @@
+/* base styles */
+:host {
+  display: block;
+  padding: 1em;
+  box-sizing: border-box;
+}
+
+:host > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* space theme */
+:host(.space-theme) .hex polygon {
+  fill: black;
+  stroke: white;
+}
+
+:host(.space-theme) .star text {
+  fill: white;
+}
+
+/* hex base style */
+.hex {
+  cursor: default;
+}
+
+.hex text {
+  fill: grey;
+  user-select: none;
+  transform: translate(0px, 1.5em);
+}
+
+.hex polygon {
+  stroke: black;
+  stroke-width: 1;
+  fill: none;
+  transition: stroke-width 0.25s, transform 0.25s;
+  fill: white;
+  transform-origin: center;
+}
+
+/* hex hover/move styles */
+svg.move .hex {
+  cursor: pointer;
+}
+
+svg.move .hex:hover polygon {
+  stroke: red;
+  stroke-width: 3;
+  z-index: 100;
+  transform: scale(0.95);
+}
+
+/* world orbit animation trigger */
+svg:not(.move) .star:hover .planet, .star.move .planet {
+  animation-play-state: running;
+}
+
+/* star move/hover styles */
+svg:not(.move) .star:hover .system, .star.move .system {
+  transform: scale(1.2);
+}
+
