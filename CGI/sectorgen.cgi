@@ -5,7 +5,7 @@ use warnings;
 
 use File::Spec;
 my ($sg_volume,$sg_directory,$sg_file) = File::Spec->splitpath(__FILE__);
-use lib File::Spec->catpath($sg_volume,$sg_directory,'PerlLibs');
+use lib File::Spec->catpath($sg_volume,$sg_directory,'../PerlLibs');
 use lib File::Spec->catpath($sg_volume,$sg_directory,'extlib/lib/perl5');
 use lib File::Spec->catpath($sg_volume,$sg_directory,'perl5/lib/perl5');
 

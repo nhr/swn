@@ -5,7 +5,7 @@ use warnings;
 
 use File::Spec;
 my ($iemap_volume,$iemap_directory,$iemap_file) = File::Spec->splitpath(__FILE__);
-use lib File::Spec->catpath($iemap_volume,$iemap_directory,'PerlLibs');
+use lib File::Spec->catpath($iemap_volume,$iemap_directory,'../PerlLibs');
 use lib File::Spec->catpath($iemap_volume,$iemap_directory,'extlib/lib/perl5');
 use lib File::Spec->catpath($iemap_volume,$iemap_directory,'perl5/lib/perl5');
 
