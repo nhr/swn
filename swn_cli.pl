@@ -10,6 +10,7 @@ use lib File::Spec->catpath($cli_volume,$cli_directory,'extlib/lib/perl5');
 use lib File::Spec->catpath($cli_volume,$cli_directory,'perl5/lib/perl5');
 
 use DBI;
+use FindBin;
 use SWNPrompt;
 use SWNUtil;
 use SWN2PDF;
