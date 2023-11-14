@@ -51,7 +51,7 @@ This app runs great on your own laptop, or in a Kubernetes or OpenShift cluster,
 
 If you just want to run your own copy of the published application, install [podman](https://podman.io/) and run:
 
-    podman run -dt -p 8080:8080/tcp quay.io/nhripps/swn
+    podman run -dt -p 8080:8080/tcp quay.io/hripps/swn:v1.4
 
 That will download and fire up an instance of this app, listening for web requests on port 8080.
 
