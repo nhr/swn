@@ -1,4 +1,4 @@
-FROM fedora:39
+FROM fedora:40
 MAINTAINER swn@emichron.com
 RUN dnf install -y gcc httpd perl perl-CGI perl-CPAN perl-Data-Dumper perl-DBI perl-Env perl-GD perl-GDTextUtil perl-JSON perl-Module-Install perl-PDF-API2 perl-Term-Prompt perl-Test-Simple sqlite
 COPY .cpan/CPAN/MyConfig.pm /root/.cpan/CPAN/MyConfig.pm
