@@ -1,4 +1,4 @@
-**ARCHIVED**: The SWN Sector Generator has beenn ported to Golang (see [nhr/swn-go](https://github.com/nhr/swn-go)). New development will occur on the newer version of this application.
+**ARCHIVED**: The SWN Sector Generator has been ported to Golang (see [nhr/swn-go](https://github.com/nhr/swn-go)). New development will occur on the newer version of this application.
 
 # SWN Sector Generator
 Written for use with the [Stars Without Number](http://www.sinenomine-pub.com/?page_id=395) role-playing game by [Sine Nomine Publishing](http://www.sinenomine-pub.com/).
